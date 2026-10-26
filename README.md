@@ -1,1 +1,1 @@
-https://design-mdm.vercel.app/
+https://tushar-kaldate-design.vercel.app/
