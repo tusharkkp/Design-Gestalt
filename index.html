@@ -1,0 +1,3923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpaceEdu — Planetary Exploration</title>
+  <link rel="icon" type="image/png" href="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202005_3346cc4d-ec3b-44ab-825c-b18e49f5021a.png">
+
+  <!-- FONTS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Poppins:wght@500;600&family=Prata&display=swap" rel="stylesheet">
+
+  <!-- BLOCKING INLINE SCRIPT (Entrance setup) -->
+  <script>
+    (function(){try{
+      if(!window.matchMedia||!matchMedia('(prefers-reduced-motion: reduce)').matches){
+        document.documentElement.classList.add('anim');
+      }
+    }catch(e){}})();
+  </script>
+
+  <style>
+    /* ==========================================================================
+       4. DESIGN SYSTEM & BASE RESET
+       ========================================================================== */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0 }
+
+    :root{
+      --font-serif : 'Prata', Georgia, serif;
+      --font-body  : 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-logo  : 'Poppins', sans-serif;
+      --dw:1353; --dh:1163; --gutter:25;
+      --u:max(min(.72px, calc(100vh / 700)), min(calc(100vw / 1353), calc(100vh / 1163)));
+      --dh-px:calc(1163 * var(--u));
+      --vshift:calc(max(0px, (100vh - var(--dh-px))) * .42);
+      --ink:#ffffff; --cyan:#79dce8; --cyan-logo:#5fd0e1;
+      --rule:rgba(255,255,255,.23); --btn-ink:#071227;
+    }
+    @supports (height:100dvh){
+      :root{
+        --u:max(min(.72px, calc(100dvh / 700)), min(calc(100vw / 1353), calc(100dvh / 1163)));
+        --vshift:calc(max(0px, (100dvh - var(--dh-px))) * .42);
+      }
+    }
+    html{scroll-behavior:smooth; height:auto}
+    body{
+      background:#04101f; color:var(--ink); font-family:var(--font-body);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      text-rendering:geometricPrecision; overflow-x:hidden; overflow-y:auto;
+      min-height:100%;
+    }
+
+    /* ==========================================================================
+       6. CORE COMPONENT STYLES
+       ========================================================================== */
+    /* BACKDROP & HERO STAGE */
+    .stage{position:relative; width:100%; height:100vh; min-height:100vh; overflow:hidden; isolation:isolate}
+    @supports (height:100dvh){
+      .stage{height:100dvh; min-height:100dvh}
+    }
+    .sky{position:absolute; inset:0; z-index:0;
+      background-image:url("https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_508c64b8-a31e-4290-bdfc-1187df70e0a6.png");
+      background-size:cover; background-position:center;
+      background-repeat:no-repeat}
+    .sky video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+      display:block; opacity:0; transition:opacity .22s linear}
+    .sky video.is-active{opacity:1}
+    @media (prefers-reduced-motion:reduce){ .sky video{display:none} }
+
+    /* SIDE PLANET SLOTS */
+    .planet{position:absolute; z-index:-1; padding:0; border:0; background:none;
+      -webkit-appearance:none; appearance:none; line-height:0; cursor:pointer;
+      pointer-events:auto;
+      transition:transform .45s cubic-bezier(.22,1,.36,1)}
+    .planet img{display:none; width:100%; height:auto}
+    .planet img.is-shown{display:block}
+    .planet:hover{transform:scale(1.045)}
+    .planet:active{transform:scale(.99)}
+    .planet-l{width:calc(143 * var(--u)); left:calc(-69.5 * var(--u)); top:calc(-38.3 * var(--u))}
+    .planet-r{width:calc(143 * var(--u)); right:calc(-64.7 * var(--u)); top:calc(-40.6 * var(--u))}
+    @media (prefers-reduced-motion:reduce){
+      .planet{transition:none} .planet:hover,.planet:active{transform:none} }
+
+    /* LAYOUT */
+    .ui{position:absolute; inset:0; z-index:3}
+    .copy{position:absolute; inset:0; transform:translateY(var(--vshift)); pointer-events:none}
+    .copy a{pointer-events:auto}
+    .col{position:absolute; left:0; right:calc(var(--gutter) * var(--u)); text-align:center}
+
+    /* NAV */
+    .navbar{
+      position:fixed; top:0; left:0; right:0; z-index:90; height:calc(88 * var(--u));
+      transition:background .35s ease, backdrop-filter .35s ease, box-shadow .35s ease;
+    }
+    .navbar.is-scrolled{
+      background:rgba(4,16,31,0.88);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    }
+    .navbar.is-scrolled::after{ opacity:0.3; }
+    .navbar::after{content:""; position:absolute; left:calc(25 * var(--u));
+      right:calc(49 * var(--u)); top:calc(86 * var(--u)); height:calc(2 * var(--u));
+      background:var(--rule); transition:opacity .35s ease}
+    .navrow{position:absolute; left:calc(25 * var(--u)); right:calc(49 * var(--u)); top:0;
+      height:calc(86 * var(--u)); display:flex; align-items:center; justify-content:space-between}
+    .logo{font-family:var(--font-logo); font-weight:600; font-size:calc(18.4 * var(--u));
+      letter-spacing:calc(-0.15 * var(--u)); line-height:1; color:#fff; text-decoration:none;
+      white-space:nowrap; position:relative; top:calc(-1 * var(--u))}
+    .logo i{font-style:normal; color:var(--cyan-logo)}
+    .burger{display:none; position:relative; width:calc(46 * var(--u)); height:calc(46 * var(--u));
+      padding:0; border:0; background:none; cursor:pointer; flex-direction:column;
+      align-items:center; justify-content:center; gap:calc(6 * var(--u)); flex:none}
+    .burger span{display:block; width:calc(24 * var(--u)); height:calc(2 * var(--u));
+      border-radius:calc(2 * var(--u)); background:#fff;
+      transition:transform .28s cubic-bezier(.4,0,.2,1), opacity .18s linear}
+    .navrow[data-open="true"] .burger span:nth-child(1){transform:translateY(calc(8 * var(--u))) rotate(45deg)}
+    .navrow[data-open="true"] .burger span:nth-child(2){opacity:0}
+    .navrow[data-open="true"] .burger span:nth-child(3){transform:translateY(calc(-8 * var(--u))) rotate(-45deg)}
+    .links{display:flex; align-items:center}
+    .links a{position:relative; display:flex; align-items:center; height:calc(86 * var(--u));
+      font-size:calc(18.4 * var(--u)); font-weight:400; line-height:1; color:#fff;
+      text-decoration:none; padding:0 calc(17.5 * var(--u));
+      letter-spacing:calc(-1 * var(--u)); white-space:nowrap}
+    .links a[aria-current="page"]::after{content:""; position:absolute; left:0; right:0;
+      top:calc(83.5 * var(--u)); height:calc(4 * var(--u)); background:var(--cyan);
+      border-radius:calc(1 * var(--u))}
+    .links a.enroll::after{content:none !important}
+    .links a:not(.enroll):hover{color:var(--cyan)}
+    .links a:nth-child(3){letter-spacing:calc(-1.75 * var(--u))}
+    .links a:nth-child(2){margin-left:calc(24 * var(--u))}
+    .links a:nth-child(3){margin-left:calc(26 * var(--u))}
+    .links a:nth-child(4){margin-left:calc(27 * var(--u))}
+    .links a.enroll{margin-left:calc(28.5 * var(--u)); width:calc(107 * var(--u));
+      height:calc(38 * var(--u)); border-radius:calc(19 * var(--u)); display:flex;
+      align-items:center; justify-content:center; font-size:calc(17 * var(--u));
+      font-weight:600; letter-spacing:calc(-0.75 * var(--u)); line-height:1;
+      color:var(--btn-ink); text-decoration:none; padding-top:calc(2 * var(--u));
+      background:linear-gradient(180deg,#ffffff 0%,#d8ecfe 9%,#dceefe 72%,#f4f9ff 100%);
+      box-shadow:0 calc(3 * var(--u)) calc(14 * var(--u)) rgba(255,255,255,.22),
+                 inset 0 0 0 calc(1.5 * var(--u)) rgba(255,255,255,.92);
+      flex:none}
+
+    /* HERO COPY */
+    .eyebrow{top:calc(188.8 * var(--u)); font-size:calc(30.45 * var(--u)); font-weight:500;
+      line-height:1; letter-spacing:calc(4 * var(--u)); text-indent:calc(4 * var(--u)); color:#fff}
+    h1.title{top:calc(268 * var(--u)); font-family:var(--font-serif); font-weight:400;
+      font-size:calc(112.4 * var(--u)); line-height:1; letter-spacing:calc(2 * var(--u));
+      text-indent:calc(2 * var(--u)); color:#fff}
+    .rule{top:calc(405.5 * var(--u)); height:calc(5 * var(--u)); font-size:0; line-height:0;
+      padding-right:calc(2 * var(--u))}
+    .rule span{display:inline-block; vertical-align:top; width:calc(100 * var(--u));
+      height:100%; border-radius:calc(2.5 * var(--u)); background:var(--cyan)}
+    p.lede{top:calc(433.2 * var(--u)); font-size:calc(18.36 * var(--u)); font-weight:400;
+      line-height:calc(30 * var(--u)); color:rgba(255,255,255,.95)}
+
+    /* CTA ROW */
+    .cta{top:calc(597 * var(--u)); height:calc(66 * var(--u)); isolation:isolate}
+    .cta a{display:inline-flex; align-items:center; justify-content:center;
+      width:calc(216 * var(--u)); height:calc(66 * var(--u)); border-radius:calc(33 * var(--u));
+      font-size:calc(17 * var(--u)); font-weight:700; letter-spacing:0; text-indent:0;
+      line-height:1; color:var(--btn-ink); text-decoration:none; padding-top:calc(2 * var(--u));
+      background:linear-gradient(180deg,#ffffff 0%,#d6e8f8 4%,#d9ecfe 72%,#ffffff 100%);
+      box-shadow:0 calc(10 * var(--u)) calc(18 * var(--u)) calc(-8 * var(--u)) rgba(255,255,255,.50),
+                 0 0 calc(26 * var(--u)) rgba(255,255,255,.18),
+                 inset 0 0 0 calc(2 * var(--u)) rgba(255,255,255,.9)}
+    .label{position:absolute; top:calc(33 * var(--u)); font-family:var(--font-serif);
+      font-weight:400; font-size:calc(17.8 * var(--u)); letter-spacing:calc(4.6 * var(--u));
+      line-height:1; color:#fff; white-space:nowrap}
+    .label.label-l{left:calc(111 * var(--u))}
+    .label.label-r{right:calc(104 * var(--u))}
+
+    /* SCROLL CONTROL */
+    .scroll{position:absolute; z-index:4; left:50%;
+      margin-left:calc((-48 - (var(--gutter) / 2)) * var(--u)); bottom:calc(68 * var(--u));
+      width:calc(96 * var(--u)); height:calc(96 * var(--u)); border-radius:50%;
+      background:rgba(24,30,42,.70); -webkit-backdrop-filter:blur(calc(6 * var(--u)));
+      backdrop-filter:blur(calc(6 * var(--u))); border:0; display:flex; align-items:center;
+      justify-content:center; cursor:pointer}
+    .scroll svg{width:calc(20 * var(--u)); height:calc(25 * var(--u)); display:block}
+
+    /* FOCUS */
+    .scroll:focus-visible,.links a:focus-visible,.enroll:focus-visible,
+    .cta a:focus-visible,.logo:focus-visible{
+      outline:calc(2 * var(--u)) solid var(--cyan); outline-offset:calc(3 * var(--u))}
+    .planet:focus-visible{outline:calc(2 * var(--u)) solid var(--cyan);
+      outline-offset:calc(6 * var(--u)); border-radius:50%}
+
+    /* ==========================================================================
+       7. RESPONSIVE TIERS — EXACT ORDER
+       ========================================================================== */
+    /* A) NAV COLLAPSE */
+    @media (max-width:1030px), (max-height:620px){
+      .navrow{left:calc(25 * var(--u)); right:calc(25 * var(--u))}
+      .burger{display:flex}
+      .links{position:absolute; top:calc(96 * var(--u)); right:0; z-index:5;
+        width:min(calc(324 * var(--u)), calc(100vw - 50 * var(--u)));
+        flex-direction:column; align-items:stretch; padding:calc(12 * var(--u));
+        border-radius:calc(20 * var(--u)); background:rgba(9,21,42,.84);
+        backdrop-filter:blur(calc(18 * var(--u)));
+        -webkit-backdrop-filter:blur(calc(18 * var(--u)));
+        border:calc(1 * var(--u)) solid rgba(255,255,255,.14);
+        box-shadow:0 calc(18 * var(--u)) calc(44 * var(--u)) rgba(2,8,20,.55);
+        opacity:0; visibility:hidden; transform:translateY(calc(-10 * var(--u)));
+        transition:opacity .24s ease, transform .28s cubic-bezier(.4,0,.2,1), visibility .28s}
+      .navrow[data-open="true"] .links{opacity:1; visibility:visible; transform:none}
+      .links a:nth-child(n){margin-left:0; height:auto; justify-content:flex-start;
+        padding:calc(14 * var(--u)) calc(16 * var(--u)); font-size:calc(19 * var(--u));
+        letter-spacing:calc(-.6 * var(--u))}
+      .links a + a{border-top:calc(1 * var(--u)) solid rgba(255,255,255,.08)}
+      .links a[aria-current="page"]::after{top:auto; bottom:calc(9 * var(--u));
+        left:calc(16 * var(--u)); right:auto; width:calc(26 * var(--u)); height:calc(3 * var(--u))}
+      .links a.enroll{margin:calc(14 * var(--u)) 0 calc(2 * var(--u)); width:100%;
+        height:calc(46 * var(--u)); border-radius:calc(23 * var(--u)); justify-content:center;
+        padding-top:calc(2 * var(--u)); font-size:calc(18 * var(--u));
+        letter-spacing:calc(-.4 * var(--u)); border-top:0}
+      .links a.enroll::after{content:none}
+    }
+
+    /* B) TABLET */
+    @media (min-width:580px) and (max-width:1030px) and (min-height:621px){
+      :root{--gutter:0;
+        --u:min(max(min(.85px, calc(100vh / 780)), min(calc(100vw / 900), calc(100vh / 1163))), 1.15px);
+        --dh-px:calc(1120 * var(--u));
+        --vshift:calc(max(0px, (100vh - var(--dh-px))) * .38)}
+      .navbar::after{left:calc(25 * var(--u)); right:calc(25 * var(--u))}
+      p.lede br{display:none}
+      p.lede{max-width:calc(620 * var(--u)); margin-left:auto; margin-right:auto; text-wrap:pretty}
+      .label.label-r{right:calc(116 * var(--u))}
+    }
+    @supports (height:100dvh){
+      @media (min-width:580px) and (max-width:1030px) and (min-height:621px){
+        :root{
+          --u:min(max(min(.85px, calc(100dvh / 780)), min(calc(100vw / 900), calc(100dvh / 1163))), 1.15px);
+          --vshift:calc(max(0px, (100dvh - var(--dh-px))) * .38);
+        }
+      }
+    }
+
+    /* C) PHONE */
+    @media (max-width:579px), (max-height:620px){
+      :root{--gutter:0;
+        --u:max(min(.92px, calc(100vh / 620)), min(calc(100vw / 430), calc(100vh / 880)));
+        --dh-px:calc(880 * var(--u));
+        --vshift:calc(max(0px, (100vh - var(--dh-px))) * .34)}
+      .navbar{height:calc(76 * var(--u))}
+      .navbar::after{left:calc(24 * var(--u)); right:calc(24 * var(--u)); top:calc(74 * var(--u))}
+      .navrow{left:calc(24 * var(--u)); right:calc(24 * var(--u)); height:calc(74 * var(--u))}
+      .links{top:calc(84 * var(--u))}
+      .copy{top:calc(76 * var(--u)); display:flex; flex-direction:column; align-items:center;
+        padding:calc(56 * var(--u)) calc(26 * var(--u)) 0}
+      .col{position:static; width:100%; right:auto}
+      .eyebrow{font-size:calc(20 * var(--u)); letter-spacing:calc(5 * var(--u)); text-indent:calc(5 * var(--u))}
+      h1.title{font-size:calc(86 * var(--u)); margin-top:calc(15 * var(--u))}
+      .rule{margin-top:calc(20 * var(--u)); height:calc(5 * var(--u)); padding-right:0}
+      .rule span{width:calc(84 * var(--u))}
+      p.lede{margin-top:calc(19 * var(--u)); font-size:calc(15.5 * var(--u));
+        line-height:calc(26 * var(--u)); max-width:calc(400 * var(--u)); text-wrap:balance}
+      p.lede br{display:none}
+      .cta{top:auto; margin-top:calc(32 * var(--u)); height:calc(60 * var(--u)); position:relative}
+      .cta a{width:calc(190 * var(--u)); height:calc(60 * var(--u)); border-radius:calc(30 * var(--u))}
+      .label{top:50%; transform:translateY(-50%); font-size:calc(16 * var(--u));
+        letter-spacing:calc(4 * var(--u))}
+      .label.label-l{left:calc(56 * var(--u))}
+      .label.label-r{right:calc(60 * var(--u))}
+      .planet-l{width:calc(89 * var(--u)); left:calc(-44.5 * var(--u)); top:calc(-17 * var(--u))}
+      .planet-r{width:calc(89 * var(--u)); right:calc(-44.5 * var(--u)); top:calc(-18.3 * var(--u))}
+      .scroll{width:calc(74 * var(--u)); height:calc(74 * var(--u));
+        margin-left:calc(-37 * var(--u)); bottom:calc(49 * var(--u))}
+      .scroll svg{width:calc(15.5 * var(--u)); height:calc(19.5 * var(--u))}
+    }
+    @supports (height:100dvh){
+      @media (max-width:579px), (max-height:620px){
+        :root{
+          --u:max(min(.92px, calc(100dvh / 620)), min(calc(100vw / 430), calc(100dvh / 880)));
+          --vshift:calc(max(0px, (100dvh - var(--dh-px))) * .34);
+        }
+      }
+    }
+
+    /* D) SHORT SCROLL HIDE */
+    @media (max-height:660px){ .scroll{display:none} }
+
+    /* E) SHORT */
+    @media (max-height:620px){
+      :root{--u:max(min(.85px, calc(100vh / 470)), min(calc(100vw / 640), calc(100vh / 560)));
+        --dh-px:calc(560 * var(--u)); --vshift:0px}
+      .copy{padding-top:calc(26 * var(--u))}
+      h1.title{font-size:calc(64 * var(--u)); margin-top:calc(8 * var(--u))}
+      .rule{margin-top:calc(12 * var(--u))}
+      p.lede{margin-top:calc(12 * var(--u))}
+      .cta{margin-top:calc(20 * var(--u))}
+      .label{top:50%; transform:translateY(-50%); font-size:calc(15 * var(--u))}
+      .label.label-l{left:calc(58 * var(--u))}
+      .label.label-r{right:calc(58 * var(--u))}
+    }
+    @supports (height:100dvh){
+      @media (max-height:620px){
+        :root{
+          --u:max(min(.85px, calc(100dvh / 470)), min(calc(100vw / 640), calc(100dvh / 560)));
+          --vshift:0px;
+        }
+      }
+    }
+    @media (min-width:821px) and (max-height:660px){ .copy{transform:none} }
+
+    /* F) NARROW PHONE */
+    @media (max-width:500px){
+      .label{top:calc(100% + 34 * var(--u)); transform:none; font-size:calc(15 * var(--u))}
+      .label.label-l{left:calc(6 * var(--u))}
+      .label.label-r{right:calc(6 * var(--u))}
+    }
+
+    @media (prefers-reduced-motion:reduce){ .links,.burger span{transition:none} }
+
+    /* ==========================================================================
+       8. ENTRANCE ANIMATION (Runs once, removes .anim & .play)
+       ========================================================================== */
+    @keyframes ent-reveal{from{transform:translateY(115%)}to{transform:translateY(0)}}
+    @keyframes ent-rise{from{opacity:0;transform:translateY(var(--rise,10px))}to{opacity:1;transform:none}}
+    @keyframes ent-settle{from{opacity:0;transform:translateY(var(--rise,8px)) scale(.965)}to{opacity:1;transform:none}}
+    @keyframes ent-draw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    @keyframes ent-fade{from{opacity:0}to{opacity:1}}
+
+    .anim{--e-expo:cubic-bezier(.16,1,.3,1); --e-quint:cubic-bezier(.22,1,.36,1);
+          --e-slow:cubic-bezier(.4,0,.2,1)}
+    .ent-mask,.ent-line{display:block}
+    .anim .ent-mask{overflow:hidden; padding-top:.18em; margin-top:-.18em}
+    .anim .ent-line{transform:translateY(115%); will-change:transform}
+    .anim .navbar::after,.anim .links a[aria-current="page"]::after,.anim .rule span{transform:scaleX(0)}
+    .anim .logo,.anim .links a,.anim .burger,.anim p.lede,.anim .label,.anim .cta a,
+    .anim .scroll,.anim .sky{opacity:0}
+    .anim .sky{will-change:opacity}
+
+    .anim.play .sky{animation:ent-fade 1.6s var(--e-slow) .25s both}
+    .anim.play .navbar::after{animation:ent-draw .9s var(--e-expo) .12s both}
+    .anim.play .logo{--rise:calc(8 * var(--u)); animation:ent-rise .6s var(--e-quint) .20s both}
+    .anim.play .links a:nth-child(1){--rise:calc(8 * var(--u)); animation:ent-rise .55s var(--e-quint) .26s both}
+    .anim.play .links a:nth-child(2){--rise:calc(8 * var(--u)); animation:ent-rise .55s var(--e-quint) .31s both}
+    .anim.play .links a:nth-child(3){--rise:calc(8 * var(--u)); animation:ent-rise .55s var(--e-quint) .36s both}
+    .anim.play .links a:nth-child(4){--rise:calc(8 * var(--u)); animation:ent-rise .55s var(--e-quint) .41s both}
+    .anim.play .links a.enroll,
+    .anim.play .burger{--rise:calc(8 * var(--u)); animation:ent-settle .6s var(--e-quint) .46s both}
+    .anim.play .links a[aria-current]::after{animation:ent-draw .55s var(--e-expo) .60s both}
+    .anim.play .eyebrow .ent-line{animation:ent-reveal .75s var(--e-expo) .30s both}
+    .anim.play h1.title .ent-line{animation:ent-reveal .95s var(--e-expo) .44s both}
+    .anim.play .rule span{animation:ent-draw .65s var(--e-expo) .78s both}
+    .anim.play p.lede{--rise:calc(12 * var(--u)); animation:ent-rise .7s var(--e-quint) .86s both}
+    .anim.play .label.label-l{--rise:calc(8 * var(--u)); animation:ent-rise .6s var(--e-quint) 1.04s both}
+    .anim.play .label.label-r{--rise:calc(8 * var(--u)); animation:ent-rise .6s var(--e-quint) 1.10s both}
+    .anim.play .cta a{--rise:calc(8 * var(--u)); animation:ent-settle .7s var(--e-quint) 1.14s both}
+    .anim.play .scroll{animation:ent-settle .6s var(--e-quint) 1.42s both}
+
+    /* ==========================================================================
+       GESTALT MODE — DESIGN STUDENT PORTFOLIO GRADE ARCHITECTURE
+       ========================================================================== */
+    /* Floating Gestalt Activation & Student Info Bar */
+    .gestalt-ctrl-bar{
+      position:fixed; bottom:calc(24 * var(--u)); left:calc(25 * var(--u));
+      z-index:10; display:flex; align-items:center; gap:calc(12 * var(--u));
+      pointer-events:auto; transition:opacity .3s ease, transform .3s ease;
+    }
+    body.gestalt-active .gestalt-ctrl-bar{
+      opacity:0; pointer-events:none; transform:translateY(24px);
+    }
+    .gestalt-btn, .student-badge-btn{
+      font-family:var(--font-body); font-size:13.5px; font-weight:600;
+      color:#fff; background:rgba(9,21,42,.85); -webkit-backdrop-filter:blur(16px);
+      backdrop-filter:blur(16px); border:1px solid rgba(121,220,232,.35);
+      border-radius:24px; padding:9px 18px;
+      cursor:pointer; display:inline-flex; align-items:center; gap:9px;
+      transition:all .25s cubic-bezier(.22,1,.36,1); box-shadow:0 6px 20px rgba(0,0,0,.45);
+      text-decoration:none;
+    }
+    .gestalt-btn:hover, .student-badge-btn:hover{
+      background:rgba(18,39,75,.95); border-color:var(--cyan);
+      box-shadow:0 0 22px rgba(121,220,232,.4);
+      transform:translateY(-2px);
+    }
+    .gestalt-btn .indicator{
+      width:9px; height:9px; border-radius:50%;
+      background:#556b82; box-shadow:none; transition:all .3s ease;
+    }
+    body.gestalt-active .gestalt-btn{
+      background:linear-gradient(135deg, rgba(12,32,60,.98), rgba(16,48,82,.98));
+      border-color:var(--cyan); box-shadow:0 0 24px rgba(121,220,232,.5);
+    }
+    body.gestalt-active .gestalt-btn .indicator{
+      background:var(--cyan); box-shadow:0 0 10px var(--cyan);
+    }
+
+    /* Interactive Canvas Click Targets in Gestalt Mode */
+    body.gestalt-active .copy,
+    body.gestalt-active .cta a,
+    body.gestalt-active .planet,
+    body.gestalt-active .rule,
+    body.gestalt-active .eyebrow,
+    body.gestalt-active h1.title,
+    body.gestalt-active p.lede{
+      pointer-events:auto !important;
+      cursor:pointer !important;
+    }
+    body.gestalt-active [data-inspect]:hover{
+      outline:2px dashed rgba(121,220,232,.75);
+      outline-offset:4px;
+    }
+
+    /* Core UI Elements Smooth Filter Transitions */
+    .navbar, .copy, .scroll, .sky, .planet, .eyebrow, h1.title, .rule, p.lede, .cta, .cta a, .label{
+      transition:filter .45s cubic-bezier(.22,1,.36,1), opacity .45s cubic-bezier(.22,1,.36,1), transform .45s cubic-bezier(.22,1,.36,1) !important;
+    }
+
+    /* --------------------------------------------------------------------------
+       SELECTIVE BLUR & HIGHLIGHT RULES (Uncluttered, High Contrast)
+       -------------------------------------------------------------------------- */
+    /* 1. FIGURE-GROUND */
+    body[data-gestalt="figureground"] .sky{
+      filter:blur(8px) brightness(.28); opacity:.4;
+    }
+    body[data-gestalt="figureground"] .navbar,
+    body[data-gestalt="figureground"] .copy{
+      filter:none !important; opacity:1 !important;
+    }
+
+    /* 2. PROXIMITY */
+    body[data-gestalt="proximity"] .sky,
+    body[data-gestalt="proximity"] .navbar,
+    body[data-gestalt="proximity"] .scroll,
+    body[data-gestalt="proximity"] .cta{
+      filter:blur(9px) brightness(.2); opacity:.22;
+    }
+    body[data-gestalt="proximity"] .eyebrow,
+    body[data-gestalt="proximity"] h1.title,
+    body[data-gestalt="proximity"] .rule,
+    body[data-gestalt="proximity"] p.lede{
+      filter:none !important; opacity:1 !important;
+    }
+
+    /* 3. CONTINUITY */
+    body[data-gestalt="continuity"] .sky,
+    body[data-gestalt="continuity"] .navbar,
+    body[data-gestalt="continuity"] .scroll,
+    body[data-gestalt="continuity"] .eyebrow,
+    body[data-gestalt="continuity"] h1.title,
+    body[data-gestalt="continuity"] p.lede{
+      filter:blur(9px) brightness(.2); opacity:.22;
+    }
+    body[data-gestalt="continuity"] .cta,
+    body[data-gestalt="continuity"] .planet,
+    body[data-gestalt="continuity"] .label,
+    body[data-gestalt="continuity"] .cta a,
+    body[data-gestalt="continuity"] .rule{
+      filter:none !important; opacity:1 !important;
+    }
+
+    /* 4. FOCAL POINT */
+    body[data-gestalt="focalpoint"] .sky,
+    body[data-gestalt="focalpoint"] .navbar,
+    body[data-gestalt="focalpoint"] .scroll,
+    body[data-gestalt="focalpoint"] .eyebrow,
+    body[data-gestalt="focalpoint"] h1.title,
+    body[data-gestalt="focalpoint"] .rule,
+    body[data-gestalt="focalpoint"] p.lede,
+    body[data-gestalt="focalpoint"] .planet,
+    body[data-gestalt="focalpoint"] .label{
+      filter:blur(11px) brightness(.18); opacity:.18;
+    }
+    body[data-gestalt="focalpoint"] .cta a{
+      filter:none !important; opacity:1 !important;
+      transform:scale(1.1) !important;
+      box-shadow:0 0 55px rgba(121,220,232,.95), 0 0 100px rgba(255,255,255,.6), inset 0 0 0 2px #fff !important;
+    }
+
+    /* 5. CLOSURE */
+    body[data-gestalt="closure"] .sky,
+    body[data-gestalt="closure"] .navbar,
+    body[data-gestalt="closure"] .scroll,
+    body[data-gestalt="closure"] .eyebrow,
+    body[data-gestalt="closure"] h1.title,
+    body[data-gestalt="closure"] .rule,
+    body[data-gestalt="closure"] p.lede,
+    body[data-gestalt="closure"] .cta a{
+      filter:blur(9px) brightness(.2); opacity:.22;
+    }
+    body[data-gestalt="closure"] .planet{
+      filter:none !important; opacity:1 !important;
+      transform:scale(1.08) !important;
+    }
+
+    /* 6. SYMMETRY */
+    body[data-gestalt="symmetry"] .sky{
+      filter:blur(6px) brightness(.3); opacity:.35;
+    }
+    body[data-gestalt="symmetry"] .scroll{
+      filter:blur(6px) brightness(.25); opacity:.25;
+    }
+    body[data-gestalt="symmetry"] .copy{
+      filter:none !important; opacity:1 !important;
+    }
+
+    /* 7. SIMILARITY */
+    body[data-gestalt="similarity"] .sky,
+    body[data-gestalt="similarity"] .eyebrow,
+    body[data-gestalt="similarity"] h1.title,
+    body[data-gestalt="similarity"] .rule,
+    body[data-gestalt="similarity"] p.lede,
+    body[data-gestalt="similarity"] .scroll{
+      filter:blur(9px) brightness(.2); opacity:.22;
+    }
+    body[data-gestalt="similarity"] .planet,
+    body[data-gestalt="similarity"] .label,
+    body[data-gestalt="similarity"] .enroll,
+    body[data-gestalt="similarity"] .cta a{
+      filter:none !important; opacity:1 !important;
+      box-shadow:0 0 32px rgba(121,220,232,.7) !important;
+    }
+
+    /* 8. COMMON FATE */
+    body[data-gestalt="commonfate"] .sky{ filter:brightness(.7); }
+    body[data-gestalt="commonfate"] .scroll{ filter:blur(6px) brightness(.25); opacity:.25; }
+
+    /* SVG Overlay Guide Canvas */
+    .gestalt-layer{
+      position:fixed; inset:0; z-index:5; pointer-events:none;
+      opacity:0; visibility:hidden; transition:opacity .35s ease, visibility .35s;
+    }
+    body.gestalt-active .gestalt-layer{ opacity:1; visibility:visible; }
+    .gestalt-svg-canvas{
+      position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+    }
+
+    /* ==========================================================================
+       GESTALT INSPECTOR CONTROLS — ZERO-OCCLUSION ARCHITECTURE
+       ========================================================================== */
+    /* Ensure all Gestalt UI controls are completely immune to background blurring */
+    .gestalt-dock, .gestalt-hud-card, .gestalt-ctrl-bar, .student-modal-backdrop, .spec-layer, .gestalt-layer{
+      filter:none !important;
+    }
+
+    /* 1. FLOATING DYNAMIC ISLAND DOCK (Bottom-Center, Zero Occlusion of Side Planets/CTA) */
+    .gestalt-dock{
+      position:fixed; bottom:18px; left:50%;
+      transform:translateX(-50%) translateY(140px);
+      z-index:1000; display:flex; align-items:center; gap:6px;
+      padding:5px 10px; background:rgba(4,16,31,.94);
+      -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
+      border:1px solid rgba(121,220,232,.35); border-radius:9999px;
+      box-shadow:0 14px 40px rgba(0,0,0,.85), 0 0 25px rgba(121,220,232,.18);
+      transition:transform .4s cubic-bezier(.22,1,.36,1);
+      max-width:min(98vw, 1260px); pointer-events:auto;
+    }
+    body.gestalt-active .gestalt-dock{ transform:translateX(-50%) translateY(0); }
+
+    .dock-tag{
+      display:flex; align-items:center; gap:6px; padding:0 6px 0 2px; flex:none;
+    }
+    .dock-status-dot{
+      width:7px; height:7px; border-radius:50%; background:var(--cyan);
+      box-shadow:0 0 8px var(--cyan); animation:pulse-glow 2s infinite;
+    }
+    .dock-title{
+      font-family:var(--font-logo); font-size:11.5px; font-weight:700;
+      letter-spacing:0.8px; text-transform:uppercase; color:#fff;
+    }
+    @media (max-width:880px){ .dock-tag{ display:none; } }
+
+    .dock-boxes{
+      display:flex; align-items:center; gap:4px; overflow-x:auto;
+      scrollbar-width:none; padding:2px; flex:1;
+    }
+    .dock-boxes::-webkit-scrollbar{ display:none; }
+
+    .dock-box{
+      font-family:var(--font-body); background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14); border-radius:18px;
+      padding:4px 8px; cursor:pointer; display:flex; align-items:center;
+      gap:5px; color:#fff; transition:all .22s cubic-bezier(.22,1,.36,1);
+      flex:none; white-space:nowrap; -webkit-appearance:none; appearance:none;
+    }
+    .dock-box:hover{
+      background:rgba(121,220,232,.16); border-color:rgba(121,220,232,.6);
+      transform:translateY(-2px);
+    }
+    .dock-box:active{ transform:scale(.96); }
+    .dock-box.is-active{
+      background:linear-gradient(135deg, rgba(121,220,232,.32), rgba(7,18,39,.95));
+      border-color:var(--cyan); box-shadow:0 0 16px rgba(121,220,232,.5);
+      transform:translateY(-2px);
+    }
+    .dock-box-num{
+      font-family:var(--font-logo); font-size:12px; font-weight:700;
+      width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.14);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; transition:all .2s;
+    }
+    .dock-box.is-active .dock-box-num{
+      background:var(--cyan); color:var(--btn-ink);
+    }
+    .dock-box-label{
+      font-size:11.5px; font-weight:500; color:rgba(255,255,255,.85);
+    }
+    .dock-box.is-active .dock-box-label{
+      color:#ffffff; font-weight:700;
+    }
+
+    .dock-actions{
+      display:flex; align-items:center; gap:4px; flex:none;
+    }
+    .dock-tool-btn{
+      font-family:var(--font-body); font-size:11.5px; font-weight:600;
+      color:#fff; background:rgba(121,220,232,.15); border:1px solid rgba(121,220,232,.4);
+      border-radius:16px; padding:4px 9px; cursor:pointer; transition:all .2s;
+    }
+    .dock-tool-btn:hover{
+      background:var(--cyan); color:var(--btn-ink);
+    }
+    .dock-exit-btn{
+      font-family:var(--font-body); font-size:11.5px; font-weight:600;
+      color:#fff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+      border-radius:16px; padding:4px 10px; cursor:pointer; transition:all .2s;
+    }
+    .dock-exit-btn:hover{
+      background:#ff4d6d; border-color:#ff4d6d; color:#fff;
+    }
+
+    /* 2. CONTEXTUAL FLOATING INSPECTOR HUD CARD (Upper Quadrant, Flippable, Collapsible) */
+    .gestalt-hud-card{
+      position:fixed; top:86px; right:24px; z-index:990;
+      width:min(430px, calc(100vw - 32px));
+      max-height:calc(100vh - 120px); overflow-y:auto;
+      scrollbar-width:thin; scrollbar-color:rgba(121,220,232,.4) transparent;
+      background:rgba(4,16,31,.95); -webkit-backdrop-filter:blur(28px);
+      backdrop-filter:blur(28px); border:1px solid rgba(121,220,232,.35);
+      border-radius:20px; padding:18px 20px;
+      box-shadow:0 18px 50px rgba(0,0,0,.8), 0 0 25px rgba(121,220,232,.15);
+      transform:translateX(130%); transition:transform .4s cubic-bezier(.22,1,.36,1), left .35s, right .35s, max-height .3s;
+      pointer-events:auto; display:flex; flex-direction:column; gap:12px;
+    }
+    .gestalt-hud-card::-webkit-scrollbar{ width:4px; }
+    .gestalt-hud-card::-webkit-scrollbar-thumb{ background:rgba(121,220,232,.4); border-radius:4px; }
+    body.gestalt-active .gestalt-hud-card{ transform:translateX(0); }
+    body.gestalt-active .gestalt-hud-card.is-left{ right:auto; left:24px; }
+    body.gestalt-active .gestalt-hud-card.is-minimized{
+      padding:10px 16px; width:auto; max-width:min(380px, calc(100vw - 32px));
+    }
+    body.gestalt-active .gestalt-hud-card.is-minimized .card-collapsible{
+      display:none;
+    }
+
+    .card-topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .card-badge-wrap{
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    }
+    .card-badge{
+      font-family:var(--font-logo); font-size:10.5px; font-weight:700;
+      letter-spacing:1.2px; text-transform:uppercase; color:var(--cyan);
+      background:rgba(121,220,232,.14); border:1px solid rgba(121,220,232,.3);
+      padding:3px 8px; border-radius:5px;
+    }
+    .card-german-law{
+      font-size:11.5px; font-style:italic; color:rgba(255,255,255,.65);
+    }
+    .card-tools{
+      display:flex; align-items:center; gap:6px; flex:none;
+    }
+    .card-tool-btn{
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16);
+      color:#fff; font-size:11.5px; font-weight:600; padding:4px 8px;
+      border-radius:12px; cursor:pointer; transition:all .2s;
+    }
+    .card-tool-btn:hover{
+      background:var(--cyan); color:var(--btn-ink); border-color:var(--cyan);
+    }
+
+    .card-title{
+      font-family:var(--font-serif); font-size:21px; font-weight:400;
+      color:#ffffff; line-height:1.2; margin:0;
+    }
+    .card-collapsible{
+      display:flex; flex-direction:column; gap:12px;
+    }
+    .card-desc{
+      font-family:var(--font-body); font-size:14.5px; line-height:1.65;
+      color:rgba(255,255,255,.94); font-weight:400; margin:0;
+    }
+    .card-takeaway{
+      font-family:var(--font-body); font-size:13px; line-height:1.55;
+      color:var(--cyan); background:rgba(121,220,232,.09);
+      border-left:3px solid var(--cyan); padding:8px 12px; border-radius:0 8px 8px 0;
+    }
+    .card-takeaway b{ color:#fff; font-weight:600; margin-right:4px; }
+
+    /* Interactive Lab Experiment Sub-Card */
+    .card-lab{
+      background:rgba(121,220,232,.08); border:1px solid rgba(121,220,232,.28);
+      border-radius:12px; padding:10px 14px; display:flex; align-items:center;
+      justify-content:space-between; gap:10px;
+    }
+    .card-lab-info{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .card-lab-title{
+      font-size:11px; font-weight:700; letter-spacing:0.8px;
+      text-transform:uppercase; color:var(--cyan);
+    }
+    .card-lab-hint{
+      font-size:12px; color:rgba(255,255,255,.75);
+    }
+    .card-lab-btn{
+      background:var(--cyan); color:var(--btn-ink);
+      font-family:var(--font-body); font-size:12px; font-weight:700;
+      padding:6px 14px; border-radius:14px; border:none; cursor:pointer;
+      white-space:nowrap; transition:all .2s; flex:none;
+    }
+    .card-lab-btn:hover{
+      background:#fff; transform:scale(1.04); box-shadow:0 0 12px var(--cyan);
+    }
+
+    .card-nav-row{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-top:2px; padding-top:8px; border-top:1px solid rgba(255,255,255,.08);
+    }
+    .card-nav-btns{
+      display:flex; align-items:center; gap:8px;
+    }
+    .card-nav-btn{
+      font-family:var(--font-body); font-size:12px; font-weight:600;
+      color:#fff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+      border-radius:16px; padding:5px 12px; cursor:pointer; transition:all .2s;
+    }
+    .card-nav-btn:hover{
+      background:var(--cyan); color:var(--btn-ink); border-color:var(--cyan);
+    }
+    .card-meta-credit{
+      font-size:11px; color:rgba(255,255,255,.6); font-family:var(--font-body);
+    }
+
+    /* 3. DESIGN SPEC BLUEPRINT OVERLAY */
+    .spec-layer{
+      position:fixed; inset:0; z-index:8; pointer-events:none;
+      opacity:0; visibility:hidden; transition:opacity .35s, visibility .35s;
+    }
+    body.spec-active .spec-layer{ opacity:1; visibility:visible; }
+    .spec-hud-metric{
+      position:fixed; top:86px; left:24px; z-index:9;
+      background:rgba(4,16,31,.92); border:1px solid rgba(121,220,232,.35);
+      border-radius:14px; padding:12px 16px; font-family:var(--font-logo);
+      font-size:11px; color:#fff; display:flex; flex-direction:column; gap:4px;
+      box-shadow:0 8px 25px rgba(0,0,0,.6); pointer-events:auto; line-height:1.45;
+    }
+    @media (max-width:768px){ .spec-hud-metric{ display:none; } }
+
+    /* Modal for Student Author Details */
+    .student-modal-backdrop{
+      position:fixed; inset:0; z-index:2000; background:rgba(2,8,20,.85);
+      -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
+      display:none; align-items:center; justify-content:center; padding:20px;
+    }
+    .student-modal-backdrop.is-open{ display:flex; }
+    .student-modal{
+      width:min(520px, 94vw); max-height:90vh; overflow-y:auto;
+      background:#07152b; border:1px solid var(--cyan); border-radius:20px;
+      padding:28px; box-shadow:0 24px 60px rgba(0,0,0,.88), 0 0 35px rgba(121,220,232,.2);
+      position:relative; animation:modal-pop .3s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes modal-pop{
+      from{transform:scale(.92) translateY(12px); opacity:0}
+      to{transform:none; opacity:1}
+    }
+    .student-modal-close{
+      position:absolute; top:18px; right:18px;
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16);
+      color:#fff; font-size:16px; border-radius:50%; width:32px; height:32px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; line-height:1; transition:all .2s;
+    }
+    .student-modal-close:hover{
+      background:#ff4d6d; border-color:#ff4d6d;
+    }
+
+    /* Student Details Modal Avatar & Profile */
+    .student-header-flex{
+      display:flex; align-items:center; gap:18px; margin-bottom:18px;
+    }
+    .student-avatar-wrap{
+      position:relative; flex:none;
+      width:84px; height:84px;
+    }
+    .student-avatar-img{
+      width:100%; height:100%; border-radius:18px;
+      object-fit:cover; object-position:top center;
+      border:2px solid var(--cyan);
+      box-shadow:0 0 20px rgba(121,220,232,.35), inset 0 0 10px rgba(0,0,0,.5);
+      background:#04101f; display:block;
+    }
+    .student-avatar-badge{
+      position:absolute; bottom:-4px; right:-4px;
+      background:#07152b; border:1px solid var(--cyan);
+      border-radius:50%; width:24px; height:24px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; box-shadow:0 2px 8px rgba(0,0,0,.6);
+    }
+    .student-title-wrap{
+      display:flex; flex-direction:column; gap:2px; min-width:0;
+    }
+    .student-course-badge{
+      font-size:11px; font-weight:700; letter-spacing:1.5px;
+      text-transform:uppercase; color:var(--cyan);
+    }
+    .student-name{
+      font-family:var(--font-serif); font-size:24px; color:#fff;
+      margin:2px 0 0; font-weight:400; line-height:1.2;
+    }
+    .student-sub{
+      color:var(--cyan); font-size:13.5px; font-weight:600; margin:3px 0 0;
+    }
+    @media (max-width:520px){
+      .student-header-flex{ flex-direction:column; align-items:flex-start; gap:12px; }
+      .student-avatar-wrap{ width:72px; height:72px; }
+      .student-name{ font-size:21px; }
+    }
+
+    /* Mobile Adaptations */
+    @media (max-width:768px){
+      .gestalt-dock{ bottom:10px; padding:4px 6px; }
+      .dock-box{ padding:4px 8px; }
+      .dock-box-label{ display:none; }
+      .gestalt-hud-card{
+        top:auto; bottom:68px; right:10px; left:10px; width:auto;
+        padding:12px 14px; max-height:calc(65vh);
+      }
+      .card-title{ font-size:18px; }
+      .card-desc{ font-size:13.5px; }
+    }
+
+    /* ==========================================================================
+       NEW SECTIONS DESIGN SYSTEM (GET STARTED, TUITION, TUTORIALS, BLOG, FOOTER)
+       ========================================================================== */
+    .section-outer{
+      position:relative; width:100%; background:#04101f;
+      border-top:1px solid rgba(255,255,255,.07); overflow:hidden;
+    }
+    .section-outer::before{
+      content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+      width:1000px; height:420px;
+      background:radial-gradient(ellipse at 50% 0%, rgba(121,220,232,.08) 0%, transparent 70%);
+      pointer-events:none; z-index:0;
+    }
+    .section-outer.alt-bg{
+      background:linear-gradient(180deg, #04101f 0%, #030c18 100%);
+    }
+
+    .section-wrap{
+      position:relative; width:100%; max-width:1260px; margin:0 auto;
+      padding:120px 28px; z-index:1;
+    }
+
+    /* Section Typography */
+    .sec-header{ margin-bottom:56px; }
+    .sec-header.centered{ text-align:center; }
+    .sec-header.centered .sec-lede{ margin-left:auto; margin-right:auto; }
+
+    .sec-badge{
+      display:inline-flex; align-items:center; gap:8px;
+      font-family:var(--font-body); font-size:11px; font-weight:700;
+      text-transform:uppercase; letter-spacing:2px; color:var(--cyan);
+      background:rgba(121,220,232,.08); border:1px solid rgba(121,220,232,.28);
+      border-radius:999px; padding:6px 14px; margin-bottom:18px;
+    }
+    .sec-badge .dot{
+      width:6px; height:6px; border-radius:50%; background:var(--cyan);
+      box-shadow:0 0 8px var(--cyan); animation:pulse-dot 2.5s infinite ease-in-out;
+    }
+    @keyframes pulse-dot{
+      0%,100%{opacity:.5; transform:scale(.9)}
+      50%{opacity:1; transform:scale(1.25)}
+    }
+
+    .sec-title{
+      font-family:var(--font-serif); font-size:clamp(34px, 4.2vw, 54px);
+      font-weight:400; line-height:1.14; letter-spacing:-0.02em;
+      color:#ffffff; margin-bottom:18px;
+    }
+    .sec-title i, .sec-title span.accent{ font-style:italic; color:var(--cyan); }
+
+    .sec-lede{
+      font-family:var(--font-body); font-size:clamp(15.5px, 1.35vw, 17.5px);
+      font-weight:400; line-height:1.7; color:rgba(255,255,255,.72);
+      max-width:680px;
+    }
+
+    /* Double-Bezel Architecture (Doppelrand) */
+    .bezel-shell{
+      background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.09);
+      border-radius:26px; padding:6px; box-shadow:0 16px 40px rgba(0,0,0,.4);
+      transition:transform .4s cubic-bezier(.2,.8,.2,1), border-color .4s ease, box-shadow .4s ease;
+      position:relative;
+    }
+    .bezel-shell:hover{
+      border-color:rgba(121,220,232,.35);
+      box-shadow:0 24px 54px rgba(0,0,0,.6), 0 0 30px rgba(121,220,232,.12);
+    }
+    .bezel-card{
+      background:linear-gradient(180deg, rgba(8,23,44,.85) 0%, rgba(4,16,31,.95) 100%);
+      border:1px solid rgba(255,255,255,.05); border-radius:20px;
+      padding:32px; box-shadow:inset 0 1px 1px rgba(255,255,255,.12);
+      position:relative; overflow:hidden; height:100%; display:flex; flex-direction:column;
+    }
+
+    .bezel-shell.is-featured{
+      border-color:rgba(121,220,232,.5); background:rgba(121,220,232,.06);
+      box-shadow:0 0 45px rgba(121,220,232,.2), 0 24px 50px rgba(0,0,0,.6);
+      transform:translateY(-6px);
+    }
+    .bezel-shell.is-featured:hover{
+      transform:translateY(-10px);
+      box-shadow:0 0 60px rgba(121,220,232,.3), 0 30px 60px rgba(0,0,0,.7);
+    }
+    .bezel-shell.is-featured .bezel-card{
+      background:linear-gradient(180deg, rgba(11,35,68,.92) 0%, rgba(5,18,36,.98) 100%);
+      border-color:rgba(121,220,232,.3);
+    }
+
+    /* Buttons (Button-in-Button Trailing Icon Architecture) */
+    .btn-pill{
+      display:inline-flex; align-items:center; justify-content:space-between;
+      gap:14px; padding:10px 10px 10px 22px; background:#ffffff; color:#071227;
+      font-family:var(--font-body); font-size:14px; font-weight:600;
+      border-radius:999px; text-decoration:none; border:0; cursor:pointer;
+      transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, background .25s ease;
+    }
+    .btn-pill:hover{
+      transform:translateY(-2px);
+      box-shadow:0 10px 24px rgba(255,255,255,.25), 0 0 20px rgba(121,220,232,.35);
+      background:#f0fbff;
+    }
+    .btn-pill:active{ transform:scale(.98); }
+    .btn-pill-icon{
+      width:32px; height:32px; border-radius:50%; background:rgba(7,18,39,.1);
+      display:flex; align-items:center; justify-content:center; color:#071227;
+      font-size:14px; transition:transform .25s ease, background .25s ease, color .25s ease;
+    }
+    .btn-pill:hover .btn-pill-icon{
+      transform:translateX(2px) translateY(-1px); background:#071227; color:#ffffff;
+    }
+
+    .btn-pill-outline{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:12px 24px; background:rgba(255,255,255,.04); color:#ffffff;
+      font-family:var(--font-body); font-size:14px; font-weight:500;
+      border-radius:999px; text-decoration:none; border:1px solid rgba(255,255,255,.16);
+      cursor:pointer; transition:all .25s ease;
+    }
+    .btn-pill-outline:hover{
+      background:rgba(121,220,232,.1); border-color:rgba(121,220,232,.4);
+      color:var(--cyan); transform:translateY(-2px);
+    }
+
+    /* --------------------------------------------------------------------------
+       SECTION 1: GET STARTED / INDUCTION PROTOCOL
+       -------------------------------------------------------------------------- */
+    .induction-grid{
+      display:grid; grid-template-columns:1fr 1.05fr; gap:40px; align-items:start;
+    }
+    .induction-steps-wrap{
+      display:flex; flex-direction:column; gap:20px;
+    }
+    .protocol-card{
+      display:flex; gap:22px; padding:24px; border-radius:20px;
+      background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08);
+      transition:transform .3s ease, border-color .3s ease;
+    }
+    .protocol-card:hover{
+      transform:translateX(6px); border-color:rgba(121,220,232,.3);
+    }
+    .protocol-num{
+      font-family:var(--font-serif); font-size:26px; color:var(--cyan);
+      font-weight:700; line-height:1; min-width:36px; padding-top:4px;
+    }
+    .protocol-content h4{
+      font-size:17px; font-weight:600; color:#ffffff; margin-bottom:8px;
+    }
+    .protocol-content p{
+      font-size:14px; line-height:1.65; color:rgba(255,255,255,.72); margin-bottom:12px;
+    }
+    .protocol-tag{
+      display:inline-block; font-size:11.5px; font-weight:600; color:var(--cyan);
+      background:rgba(121,220,232,.08); padding:4px 10px; border-radius:6px;
+      border:1px solid rgba(121,220,232,.2);
+    }
+    .induction-action-row{
+      display:flex; gap:16px; margin-top:12px; flex-wrap:wrap;
+    }
+
+    /* Holographic Flight Pass Generator */
+    .pass-generator-shell{ width:100%; }
+    .card-kicker{
+      font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+      color:var(--cyan); margin-bottom:8px;
+    }
+    .pass-card-title{
+      font-family:var(--font-serif); font-size:26px; color:#ffffff; margin-bottom:20px;
+    }
+    .pass-form-grid{
+      display:flex; flex-direction:column; gap:14px; margin-bottom:24px;
+    }
+    .pass-field label{
+      display:block; font-size:12.5px; font-weight:600; color:rgba(255,255,255,.8);
+      margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;
+    }
+    .pass-field input, .pass-field select{
+      width:100%; padding:11px 16px; border-radius:12px;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.14);
+      color:#ffffff; font-family:var(--font-body); font-size:14px; outline:none;
+      transition:border-color .25s ease, box-shadow .25s ease;
+    }
+    .pass-field input:focus, .pass-field select:focus{
+      border-color:var(--cyan); box-shadow:0 0 16px rgba(121,220,232,.25);
+    }
+    .pass-field select option{
+      background:#07162c; color:#ffffff;
+    }
+    .outpost-pills{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .outpost-pill{
+      padding:8px 14px; border-radius:10px; font-size:12.5px; font-weight:600;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.8); cursor:pointer; transition:all .2s ease;
+    }
+    .outpost-pill:hover{ border-color:var(--cyan); color:#ffffff; }
+    .outpost-pill.is-active{
+      background:rgba(121,220,232,.18); border-color:var(--cyan);
+      color:var(--cyan); box-shadow:0 0 12px rgba(121,220,232,.25);
+    }
+
+    /* Holographic Ticket Render */
+    .holo-ticket{
+      background:linear-gradient(135deg, rgba(8,28,54,.95) 0%, rgba(4,14,30,.98) 100%);
+      border:1px solid rgba(121,220,232,.35); border-radius:18px;
+      padding:24px; position:relative; overflow:hidden;
+      box-shadow:0 12px 30px rgba(0,0,0,.5), 0 0 24px rgba(121,220,232,.12);
+    }
+    .holo-ticket::before{
+      content:""; position:absolute; inset:0;
+      background:linear-gradient(120deg, transparent 20%, rgba(121,220,232,.08) 50%, transparent 80%);
+      pointer-events:none;
+    }
+    .ticket-top{
+      display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;
+    }
+    .ticket-brand{ display:flex; align-items:baseline; gap:12px; }
+    .ticket-logo{ font-family:var(--font-logo); font-size:18px; font-weight:600; color:#fff; }
+    .ticket-logo i{ font-style:normal; color:var(--cyan-logo); }
+    .ticket-tag{
+      font-size:10px; letter-spacing:1.5px; font-weight:700; color:rgba(255,255,255,.6);
+      text-transform:uppercase;
+    }
+    .ticket-status-pill{
+      display:inline-flex; align-items:center; gap:6px; font-size:11px;
+      font-weight:700; color:var(--cyan); background:rgba(121,220,232,.1);
+      border:1px solid rgba(121,220,232,.3); padding:4px 10px; border-radius:999px;
+    }
+    .ticket-status-pill .dot{
+      width:5px; height:5px; border-radius:50%; background:var(--cyan);
+    }
+    .ticket-divider{
+      height:1px; border-bottom:1.5px dashed rgba(255,255,255,.2);
+      margin:16px -24px; position:relative;
+    }
+    .ticket-divider::before, .ticket-divider::after{
+      content:""; position:absolute; top:-7px; width:14px; height:14px;
+      border-radius:50%; background:#04101f;
+    }
+    .ticket-divider::before{ left:-7px; }
+    .ticket-divider::after{ right:-7px; }
+
+    .ticket-meta-grid{
+      display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; margin-bottom:18px;
+    }
+    .t-col.full{ grid-column:span 2; }
+    .t-lbl{ font-size:10.5px; font-weight:700; letter-spacing:1px; color:rgba(255,255,255,.5); }
+    .t-val{ font-size:13.5px; font-weight:600; color:#ffffff; margin-top:2px; }
+    .t-val.highlight{ color:var(--cyan); font-family:monospace; }
+
+    .ticket-footer{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; border-top:1px solid rgba(255,255,255,.1); padding-top:16px;
+    }
+    .ticket-barcode{ display:flex; flex-direction:column; gap:4px; }
+    .barcode-lines{
+      width:140px; height:24px;
+      background:repeating-linear-gradient(90deg, #fff 0, #fff 2px, transparent 2px, transparent 4px, #fff 4px, #fff 7px, transparent 7px, transparent 9px, #fff 9px, #fff 10px, transparent 10px, transparent 13px, #fff 13px, #fff 16px, transparent 16px, transparent 18px);
+      opacity:.85;
+    }
+    .barcode-num{ font-family:monospace; font-size:10px; color:rgba(255,255,255,.6); letter-spacing:1px; }
+
+    /* --------------------------------------------------------------------------
+       SECTION 2: TUITION MATRIX & FELLOWSHIP GRANTS
+       -------------------------------------------------------------------------- */
+    .tuition-freq-toggle-wrap{
+      display:inline-flex; align-items:center; gap:14px;
+      padding:6px 14px; background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.12); border-radius:999px;
+      margin-top:28px;
+    }
+    .freq-label{ font-size:13.5px; font-weight:600; color:rgba(255,255,255,.8); }
+    .discount-badge{
+      font-size:10.5px; font-weight:700; background:rgba(121,220,232,.18);
+      border:1px solid rgba(121,220,232,.4); color:var(--cyan);
+      padding:2px 8px; border-radius:999px; margin-left:4px;
+    }
+    .freq-switch{
+      width:44px; height:24px; border-radius:12px; background:rgba(255,255,255,.16);
+      border:0; cursor:pointer; position:relative; transition:background .25s ease;
+    }
+    .freq-switch.is-active{ background:var(--cyan); }
+    .freq-switch-knob{
+      position:absolute; top:2px; left:2px; width:20px; height:20px;
+      border-radius:50%; background:#ffffff; box-shadow:0 2px 6px rgba(0,0,0,.4);
+      transition:transform .25s cubic-bezier(.2,.8,.2,1);
+    }
+    .freq-switch.is-active .freq-switch-knob{ transform:translateX(20px); }
+
+    .pricing-grid{
+      display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; margin-top:40px;
+    }
+    .featured-badge{
+      position:absolute; top:0; left:50%; transform:translateX(-50%);
+      background:linear-gradient(90deg, #5fd0e1, #79dce8); color:#071227;
+      font-size:10.5px; font-weight:700; letter-spacing:1px;
+      padding:4px 16px; border-radius:0 0 10px 10px; text-transform:uppercase;
+      box-shadow:0 4px 12px rgba(121,220,232,.4);
+    }
+    .plan-header{ margin-bottom:20px; }
+    .plan-tier-eyebrow{
+      display:inline-block; font-size:11px; font-weight:700; letter-spacing:1.5px;
+      color:rgba(255,255,255,.6); margin-bottom:8px;
+    }
+    .plan-name{
+      font-family:var(--font-serif); font-size:26px; color:#ffffff; margin-bottom:8px;
+    }
+    .plan-summary{
+      font-size:13.5px; line-height:1.6; color:rgba(255,255,255,.68);
+    }
+    .plan-price-wrap{
+      display:flex; align-items:baseline; gap:4px; margin-bottom:24px;
+      padding-bottom:20px; border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .plan-currency{
+      font-family:var(--font-serif); font-size:26px; color:var(--cyan); font-weight:700;
+    }
+    .plan-amount{
+      font-family:var(--font-serif); font-size:46px; color:#ffffff; font-weight:700;
+      line-height:1; letter-spacing:-1px;
+    }
+    .plan-period{
+      font-size:14px; color:rgba(255,255,255,.6); font-weight:500;
+    }
+    .plan-features{
+      display:flex; flex-direction:column; gap:12px; margin-bottom:28px; flex-grow:1;
+    }
+    .feat-item{
+      font-size:13.5px; line-height:1.55; color:rgba(255,255,255,.78);
+    }
+    .feat-item.highlight{ color:var(--cyan); }
+    .plan-cta{ width:100%; justify-content:center; }
+
+    /* Grant Calculator Card */
+    .grant-calc-shell{ margin-top:48px; }
+    .grant-flex{
+      display:grid; grid-template-columns:1.1fr 1fr; gap:40px; align-items:center;
+    }
+    .grant-controls{ display:flex; flex-direction:column; gap:16px; }
+    .grant-input-group label{
+      display:block; font-size:12px; font-weight:600; text-transform:uppercase;
+      letter-spacing:.8px; color:rgba(255,255,255,.8); margin-bottom:6px;
+    }
+    .grant-input-group select{
+      width:100%; padding:11px 14px; border-radius:12px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+      color:#ffffff; font-family:var(--font-body); font-size:13.5px; outline:none;
+    }
+    .grant-input-group select option{ background:#07162c; color:#ffffff; }
+    .grant-result-box{
+      background:rgba(121,220,232,.08); border:1px solid rgba(121,220,232,.3);
+      border-radius:14px; padding:16px; text-align:center;
+    }
+    .grant-pct-val{
+      font-family:var(--font-serif); font-size:28px; font-weight:700; color:var(--cyan);
+      letter-spacing:.5px; margin-bottom:4px;
+    }
+    .grant-amount-text{
+      font-size:13px; color:rgba(255,255,255,.85); font-weight:500;
+    }
+
+    /* --------------------------------------------------------------------------
+       SECTION 3: TUTORIALS & INTERACTIVE DELTA-V SIMULATOR
+       -------------------------------------------------------------------------- */
+    .sim-lab-shell{ margin-bottom:48px; }
+    .sim-header-row{
+      display:flex; justify-content:space-between; align-items:flex-start;
+      margin-bottom:24px; flex-wrap:wrap; gap:16px;
+    }
+    .sim-title{
+      font-family:var(--font-serif); font-size:26px; color:#ffffff; margin-bottom:6px;
+    }
+    .sim-subtitle{
+      font-size:14px; line-height:1.6; color:rgba(255,255,255,.72); max-width:640px;
+    }
+    .sim-tag{
+      font-size:11px; font-weight:700; color:var(--cyan); background:rgba(121,220,232,.1);
+      border:1px solid rgba(121,220,232,.25); padding:6px 12px; border-radius:8px;
+    }
+    .sim-interactive-grid{
+      display:grid; grid-template-columns:1fr 1.1fr; gap:36px; align-items:center;
+    }
+    .sim-controls-pane{ display:flex; flex-direction:column; gap:18px; }
+    .sim-control-group label{
+      display:block; font-size:12.5px; font-weight:600; text-transform:uppercase;
+      letter-spacing:.8px; color:rgba(255,255,255,.8); margin-bottom:8px;
+    }
+    .sim-body-btns{ display:flex; gap:8px; flex-wrap:wrap; }
+    .sim-btn{
+      padding:8px 14px; border-radius:10px; font-size:12.5px; font-weight:600;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.8); cursor:pointer; transition:all .2s ease;
+    }
+    .sim-btn:hover{ border-color:var(--cyan); color:#ffffff; }
+    .sim-btn.is-active{
+      background:rgba(121,220,232,.18); border-color:var(--cyan);
+      color:var(--cyan); box-shadow:0 0 12px rgba(121,220,232,.25);
+    }
+    .sim-slider{
+      width:100%; -webkit-appearance:none; height:6px; border-radius:3px;
+      background:rgba(255,255,255,.18); outline:none;
+    }
+    .sim-slider::-webkit-slider-thumb{
+      -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+      background:var(--cyan); cursor:pointer; box-shadow:0 0 10px var(--cyan);
+    }
+    .sim-select{
+      width:100%; padding:10px 14px; border-radius:12px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+      color:#ffffff; font-family:var(--font-body); font-size:13.5px; outline:none;
+    }
+    .sim-select option{ background:#07162c; color:#ffffff; }
+
+    .sim-visual-pane{
+      background:rgba(3,11,22,.85); border:1px solid rgba(121,220,232,.2);
+      border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:16px;
+    }
+    .sim-svg-wrap{ width:100%; height:200px; display:flex; align-items:center; justify-content:center; }
+    .sim-orbit-svg{ width:100%; height:100%; max-height:200px; }
+    .sim-hud-grid{
+      display:grid; grid-template-columns:1fr 1fr; gap:12px;
+      border-top:1px solid rgba(255,255,255,.08); padding-top:14px;
+    }
+    .sim-hud-item{ display:flex; flex-direction:column; }
+    .hud-label{ font-size:10.5px; font-weight:700; letter-spacing:1px; color:rgba(255,255,255,.5); }
+    .hud-value{ font-size:16px; font-weight:700; color:var(--cyan); font-family:monospace; margin-top:2px; }
+
+    .tut-filter-row{
+      display:flex; gap:10px; margin-bottom:32px; flex-wrap:wrap;
+    }
+    .tut-tab{
+      padding:9px 18px; border-radius:999px; font-size:13px; font-weight:600;
+      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.75); cursor:pointer; transition:all .2s ease;
+    }
+    .tut-tab:hover{ border-color:var(--cyan); color:#ffffff; }
+    .tut-tab.is-active{
+      background:var(--cyan); border-color:var(--cyan); color:#071227; font-weight:700;
+      box-shadow:0 0 16px rgba(121,220,232,.4);
+    }
+
+    .tutorials-grid{
+      display:grid; grid-template-columns:repeat(3, 1fr); gap:24px;
+    }
+    .tut-top{
+      display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;
+    }
+    .tut-badge{
+      font-size:10.5px; font-weight:700; letter-spacing:1px; color:var(--cyan);
+      background:rgba(121,220,232,.1); padding:3px 8px; border-radius:6px;
+    }
+    .tut-time{ font-size:12px; color:rgba(255,255,255,.6); font-weight:500; }
+    .tut-title{
+      font-family:var(--font-serif); font-size:19px; color:#ffffff; line-height:1.3;
+      margin-bottom:10px;
+    }
+    .tut-desc{
+      font-size:13.5px; line-height:1.6; color:rgba(255,255,255,.68); margin-bottom:20px;
+      flex-grow:1;
+    }
+    .tut-footer{
+      display:flex; justify-content:space-between; align-items:center;
+      border-top:1px solid rgba(255,255,255,.08); padding-top:14px;
+    }
+    .tut-diff{ font-size:12px; color:rgba(255,255,255,.6); }
+    .tut-open-btn{
+      background:none; border:0; color:var(--cyan); font-size:13px; font-weight:600;
+      cursor:pointer; padding:4px 8px; border-radius:6px; transition:all .2s ease;
+    }
+    .tut-open-btn:hover{ background:rgba(121,220,232,.12); transform:translateX(3px); }
+
+    /* --------------------------------------------------------------------------
+       SECTION 4: BLOG / DEEP SPACE DISPATCH
+       -------------------------------------------------------------------------- */
+    .lead-article-shell{ margin-bottom:40px; }
+    .lead-grid{
+      display:grid; grid-template-columns:1.25fr 1fr; gap:40px; align-items:center;
+    }
+    .lead-meta-row{ display:flex; gap:16px; align-items:center; margin-bottom:14px; }
+    .lead-issue{
+      font-size:11px; font-weight:700; letter-spacing:1.5px; color:var(--cyan);
+      background:rgba(121,220,232,.1); padding:4px 10px; border-radius:6px;
+    }
+    .lead-date{ font-size:12px; font-weight:600; color:rgba(255,255,255,.6); }
+    .lead-headline{
+      font-family:var(--font-serif); font-size:clamp(22px, 2.5vw, 32px);
+      line-height:1.25; color:#ffffff; margin-bottom:12px;
+    }
+    .lead-authors{
+      font-size:13.5px; color:rgba(255,255,255,.8); margin-bottom:14px;
+    }
+    .lead-authors b{ color:#ffffff; }
+    .lead-excerpt{
+      font-size:14.5px; line-height:1.68; color:rgba(255,255,255,.72); margin-bottom:24px;
+    }
+    .lead-action-row{
+      display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+    }
+    .lead-cite{ font-size:12px; color:rgba(255,255,255,.5); font-family:monospace; }
+
+    .lead-telemetry-sidebar{
+      background:rgba(4,14,30,.8); border:1px solid rgba(121,220,232,.25);
+      border-radius:18px; padding:24px; box-shadow:inset 0 1px 1px rgba(255,255,255,.1);
+    }
+    .t-box-title{
+      font-size:11px; font-weight:700; letter-spacing:1.5px; color:var(--cyan);
+      margin-bottom:16px; border-bottom:1px solid rgba(121,220,232,.2); padding-bottom:8px;
+    }
+    .t-metric-row{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05);
+      font-size:13px;
+    }
+    .t-metric-label{ color:rgba(255,255,255,.65); }
+    .t-metric-val{ font-weight:600; color:#ffffff; font-family:monospace; }
+
+    .blog-bento-grid{
+      display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; margin-bottom:48px;
+    }
+    .blog-card{ display:flex; flex-direction:column; height:100%; }
+    .blog-card-cat{
+      font-size:11px; font-weight:700; letter-spacing:1px; color:rgba(255,255,255,.6);
+      margin-bottom:12px;
+    }
+    .blog-card-title{
+      font-family:var(--font-serif); font-size:19px; line-height:1.32;
+      color:#ffffff; margin-bottom:12px;
+    }
+    .blog-card-summary{
+      font-size:13.5px; line-height:1.6; color:rgba(255,255,255,.68);
+      margin-bottom:20px; flex-grow:1;
+    }
+    .blog-card-foot{
+      display:flex; justify-content:space-between; align-items:center;
+      border-top:1px solid rgba(255,255,255,.08); padding-top:14px;
+    }
+    .blog-author{ font-size:12.5px; color:rgba(255,255,255,.7); }
+    .blog-read-link{
+      background:none; border:0; color:var(--cyan); font-size:13px; font-weight:600;
+      cursor:pointer; padding:4px 8px; border-radius:6px; transition:all .2s ease;
+    }
+    .blog-read-link:hover{ background:rgba(121,220,232,.12); transform:translateX(3px); }
+
+    .newsletter-shell{ margin-top:32px; }
+    .news-flex{
+      display:grid; grid-template-columns:1.2fr 1fr; gap:36px; align-items:center;
+    }
+    .news-form{
+      display:flex; gap:12px; align-items:center;
+    }
+    .news-form input{
+      flex-grow:1; padding:12px 18px; border-radius:999px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.16);
+      color:#ffffff; font-family:var(--font-body); font-size:14px; outline:none;
+      transition:border-color .25s ease;
+    }
+    .news-form input:focus{ border-color:var(--cyan); box-shadow:0 0 16px rgba(121,220,232,.25); }
+    .news-status-msg{
+      margin-top:12px; font-size:13px; color:var(--cyan); font-weight:600; display:none;
+    }
+
+    /* --------------------------------------------------------------------------
+       SECTION 5: FOOTER & GROUND CONTROL ATTRIBUTION
+       -------------------------------------------------------------------------- */
+    .site-footer{
+      position:relative; width:100%; background:#020a14;
+      border-top:1px solid rgba(255,255,255,.09); padding:80px 28px 40px;
+    }
+    .footer-wrap{ max-width:1260px; margin:0 auto; }
+    .footer-grid{
+      display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; margin-bottom:60px;
+    }
+    .brand-col .logo{ font-size:24px; margin-bottom:14px; display:inline-block; }
+    .footer-tagline{
+      font-size:14px; line-height:1.65; color:rgba(255,255,255,.65); margin-bottom:18px;
+    }
+    .footer-telemetry-pill{
+      display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:700;
+      color:var(--cyan); background:rgba(121,220,232,.08); border:1px solid rgba(121,220,232,.25);
+      padding:5px 12px; border-radius:999px; margin-bottom:12px;
+    }
+    .footer-telemetry-pill .dot{
+      width:5px; height:5px; border-radius:50%; background:var(--cyan);
+    }
+    .footer-time-clock{
+      font-family:monospace; font-size:12px; color:rgba(255,255,255,.7);
+    }
+    .footer-col-title{
+      font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+      color:#ffffff; margin-bottom:18px;
+    }
+    .footer-links{ list-style:none; display:flex; flex-direction:column; gap:10px; }
+    .footer-links a{
+      color:rgba(255,255,255,.65); text-decoration:none; font-size:13.5px;
+      transition:color .2s ease, transform .2s ease; display:inline-block;
+    }
+    .footer-links a:hover{ color:var(--cyan); transform:translateX(3px); }
+
+    .footer-bottom-row{
+      border-top:1px solid rgba(255,255,255,.08); padding-top:28px;
+      display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
+    }
+    .footer-attribution{
+      font-size:13px; color:rgba(255,255,255,.75);
+    }
+    .footer-attribution b{ color:#ffffff; }
+    .footer-attribution code{
+      color:var(--cyan); font-family:monospace; font-size:12px;
+    }
+    .footer-copyright{
+      font-size:12.5px; color:rgba(255,255,255,.5);
+    }
+
+    /* --------------------------------------------------------------------------
+       MODALS: ARTICLE READER & TUTORIAL LAB PREVIEW
+       -------------------------------------------------------------------------- */
+    .article-modal-backdrop, .lab-modal-backdrop{
+      position:fixed; inset:0; z-index:200; background:rgba(2,8,18,.85);
+      backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      display:flex; align-items:center; justify-content:center; padding:20px;
+      opacity:0; pointer-events:none; transition:opacity .3s ease;
+    }
+    .article-modal-backdrop.is-open, .lab-modal-backdrop.is-open{
+      opacity:1; pointer-events:auto;
+    }
+    .modal-sheet{
+      background:linear-gradient(180deg, #071830 0%, #030c18 100%);
+      border:1px solid rgba(121,220,232,.35); border-radius:24px;
+      max-width:840px; width:100%; max-height:85vh; overflow-y:auto;
+      padding:40px; position:relative; box-shadow:0 30px 80px rgba(0,0,0,.8);
+    }
+    .modal-close-x{
+      position:absolute; top:20px; right:20px; width:36px; height:36px;
+      border-radius:50%; background:rgba(255,255,255,.08); border:0;
+      color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center;
+      justify-content:center; transition:all .2s ease;
+    }
+    .modal-close-x:hover{ background:rgba(121,220,232,.25); color:var(--cyan); }
+    .modal-sheet h2{
+      font-family:var(--font-serif); font-size:clamp(24px, 3vw, 34px);
+      color:#ffffff; margin-bottom:12px; line-height:1.2;
+    }
+    .modal-meta{
+      font-size:13px; color:var(--cyan); margin-bottom:24px; padding-bottom:16px;
+      border-bottom:1px solid rgba(255,255,255,.1);
+    }
+    .modal-prose{
+      font-size:15px; line-height:1.75; color:rgba(255,255,255,.82);
+    }
+    .modal-prose p{ margin-bottom:16px; }
+    .modal-prose h3{
+      font-size:18px; color:#ffffff; margin:24px 0 10px; font-weight:600;
+    }
+    .modal-prose ul{ margin:12px 0 16px 20px; }
+    .modal-prose li{ margin-bottom:8px; }
+    .math-callout{
+      background:rgba(121,220,232,.08); border-left:3px solid var(--cyan);
+      padding:14px 18px; border-radius:0 12px 12px 0; margin:18px 0;
+      font-family:monospace; font-size:13.5px; color:#ffffff;
+    }
+
+    /* Toast Notification */
+    .toast-notify{
+      position:fixed; bottom:28px; right:28px; z-index:300;
+      background:rgba(4,16,31,.95); border:1px solid var(--cyan);
+      box-shadow:0 10px 30px rgba(0,0,0,.6), 0 0 20px rgba(121,220,232,.3);
+      border-radius:14px; padding:16px 22px; max-width:380px;
+      color:#ffffff; font-size:13.5px; line-height:1.5;
+      display:flex; align-items:center; gap:12px;
+      transform:translateY(120%); opacity:0; pointer-events:none;
+      transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s ease;
+    }
+    .toast-notify.is-shown{
+      transform:translateY(0); opacity:1; pointer-events:auto;
+    }
+    .toast-icon{ font-size:20px; flex-shrink:0; }
+
+    /* Responsive Media Queries */
+    @media (max-width:960px){
+      .induction-grid{ grid-template-columns:1fr; }
+      .pricing-grid{ grid-template-columns:1fr; }
+      .grant-flex{ grid-template-columns:1fr; }
+      .sim-interactive-grid{ grid-template-columns:1fr; }
+      .tutorials-grid{ grid-template-columns:1fr; }
+      .lead-grid{ grid-template-columns:1fr; }
+      .blog-bento-grid{ grid-template-columns:1fr; }
+      .news-flex{ grid-template-columns:1fr; }
+      .footer-grid{ grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width:600px){
+      .section-wrap{ padding:80px 20px; }
+      .news-form{ flex-direction:column; }
+      .news-form input{ width:100%; }
+      .footer-grid{ grid-template-columns:1fr; }
+      .modal-sheet{ padding:24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GLOBAL FIXED NAVIGATION -->
+  <header class="navbar">
+    <div class="navrow">
+      <a class="logo" href="#hero">space<i>edu</i></a>
+      <nav class="links" id="site-nav">
+        <a href="#hero" aria-current="page" data-section="hero">Planets</a>
+        <a href="#tuition" data-section="tuition">Tution</a>
+        <a href="#tutorials" data-section="tutorials">Tutorials</a>
+        <a href="#blog" data-section="blog">Blog</a>
+        <a class="enroll" href="#get-started" data-section="get-started">Enroll</a>
+      </nav>
+      <button class="burger" type="button" aria-label="Open navigation"
+              aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       5. HERO SECTION MARKUP
+       ======================================================================== -->
+  <div class="stage" id="hero">
+
+    <!-- BACKDROP CANVAS -->
+    <div class="sky" id="sky-canvas">
+      <!-- 3 background video clips -->
+      <video data-planet="earth" class="is-active" autoplay muted loop playsinline preload="auto"
+             src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202422_3ffb4889-c520-432d-8458-038009eb40df.mp4"
+             poster="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_508c64b8-a31e-4290-bdfc-1187df70e0a6.png"
+             aria-hidden="true"></video>
+
+      <video data-planet="venus" muted loop playsinline preload="none"
+             data-src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202422_b211cd74-013b-4dd3-bfd0-64491d8696fa.mp4"
+             poster="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_cf55d1d8-7b59-4a64-80da-d72052ae974e.png"
+             aria-hidden="true"></video>
+
+      <video data-planet="mars" muted loop playsinline preload="none"
+             data-src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202422_51eae59a-2459-4c84-907c-cc5edfe5fea7.mp4"
+             poster="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_0ba6de7c-285d-43dc-b7ab-8c54c73707cb.png"
+             aria-hidden="true"></video>
+    </div>
+
+    <!-- UI LAYER -->
+    <div class="ui">
+      <!-- HERO COPY COMPOSITION (With Direct Gestalt Canvas Inspection) -->
+      <div class="copy" id="hero-copy" data-inspect="proximity" title="Click to inspect: Law of Proximity">
+        <div class="col eyebrow">
+          <span class="ent-mask"><span class="ent-line">PLANET</span></span>
+        </div>
+        <h1 class="col title">
+          <span class="ent-mask"><span class="ent-line">EARTH</span></span>
+        </h1>
+        <div class="col rule" data-inspect="continuity" title="Click to inspect: Law of Continuity"><span></span></div>
+        <p class="col lede">Learn more about the fascinating details that we call our home,
+           Planet Earth. Course enrollment <br>starts today. Early Bird tickets typically
+           last a week, don&rsquo;t miss out!</p>
+        <div class="col cta" id="cta-group">
+          <!-- LEFT SLOT PLANET -->
+          <button class="planet planet-l" type="button" data-slot="l" data-inspect="closure" aria-label="Show VENUS" title="Click to inspect: Law of Closure">
+            <img data-planet="earth" alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202005_3346cc4d-ec3b-44ab-825c-b18e49f5021a.png">
+            <img data-planet="venus" alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202012_640b239a-d08a-4200-adb2-741bbe129ac8.png">
+            <img data-planet="mars" alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202018_3d559490-f613-4ed7-a3bb-3b7e9fc90fb8.png">
+          </button>
+
+          <!-- RIGHT SLOT PLANET -->
+          <button class="planet planet-r" type="button" data-slot="r" data-inspect="closure" aria-label="Show MARS" title="Click to inspect: Law of Closure">
+            <img data-planet="earth" alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202005_3346cc4d-ec3b-44ab-825c-b18e49f5021a.png">
+            <img data-planet="venus" alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202012_640b239a-d08a-4200-adb2-741bbe129ac8.png">
+            <img data-planet="mars" alt="" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202018_3d559490-f613-4ed7-a3bb-3b7e9fc90fb8.png">
+          </button>
+
+          <a href="#get-started" id="main-cta-btn" data-inspect="focalpoint" title="Click to inspect: Law of Focal Point">GET STARTED</a>
+          <span class="label label-l"></span>
+          <span class="label label-r"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCROLL CONTROL -->
+    <button class="scroll" type="button" aria-label="Scroll to next section">
+      <svg viewBox="0 0 26 33" fill="none" aria-hidden="true">
+        <path d="M13 1.5 V31.5 M1.9 20.4 L13 31.5 L24.1 20.4" stroke="#ffffff"
+              stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
+      </svg>
+    </button>
+
+    <!-- ========================================================================
+         GESTALT MODE LIVE OVERLAYS & CONTROLS
+         ======================================================================== -->
+    <!-- Floating controls for Gestalt Mode activation & Author details -->
+    <div class="gestalt-ctrl-bar">
+      <button class="gestalt-btn" id="gestalt-toggle-btn" type="button" aria-pressed="false"
+              title="Toggle Gestalt Principles live inspector">
+        <span class="indicator"></span>
+        <span>👁️ Gestalt Mode</span>
+      </button>
+
+      <button class="student-badge-btn" id="student-info-btn" type="button"
+              title="View student author details">
+        <img src="tushar.jpeg" alt="" style="width:18px; height:18px; border-radius:50%; object-fit:cover; border:1px solid var(--cyan);">
+        <span>Student Details</span>
+      </button>
+    </div>
+
+    <!-- Dynamic SVG Guides Overlay for highlighted principles -->
+    <div class="gestalt-layer" id="gestalt-overlay-layer">
+      <svg class="gestalt-svg-canvas" id="gestalt-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <g id="svg-guides-group"></g>
+      </svg>
+    </div>
+
+    <!-- 1. FLOATING CONTEXTUAL INSPECTOR HUD CARD (Upper Quadrant, Flippable, Collapsible) -->
+    <aside class="gestalt-hud-card" id="gestalt-hud-card" aria-label="Gestalt Principle Inspector">
+      <div class="card-topbar">
+        <div class="card-badge-wrap">
+          <span class="card-badge" id="card-badge">PRINCIPLE 01 / 08</span>
+          <span class="card-german-law" id="card-german-law">Gesetz der Figur und des Grundes</span>
+        </div>
+        <div class="card-tools">
+          <button type="button" class="card-tool-btn" id="card-flip-btn" title="Flip HUD position left/right (Key: F)">⇄ Flip</button>
+          <button type="button" class="card-tool-btn" id="card-min-btn" title="Minimize / Expand HUD (Key: M)">─ Min</button>
+          <button type="button" class="card-tool-btn" id="card-close-btn" title="Exit Gestalt Mode (Key: Esc)">✕</button>
+        </div>
+      </div>
+
+      <h3 class="card-title" id="card-title">Law of Figure-Ground</h3>
+
+      <div class="card-collapsible" id="card-collapsible">
+        <p class="card-desc" id="card-desc">
+          The human visual cortex organizes visual scenes into an actionable, prominent &ldquo;Figure&rdquo; (foreground text, buttons, rules) and a boundless &ldquo;Ground&rdquo; (deep space planetary video backdrop). High optical contrast allows immediate cognitive separation without ocular fatigue.
+        </p>
+
+        <div class="card-takeaway" id="card-takeaway">
+          <b>⚡ Engineering Takeaway:</b>
+          <span id="card-takeaway-text">Filters out background noise, directing 100% of initial gaze fixations directly to educational content.</span>
+        </div>
+
+        <!-- Interactive Lab Experiment -->
+        <div class="card-lab" id="card-lab">
+          <div class="card-lab-info">
+            <span class="card-lab-title" id="card-lab-title">Interactive Experiment</span>
+            <span class="card-lab-hint" id="card-lab-hint">Toggle backdrop blur & contrast segregation</span>
+          </div>
+          <button type="button" class="card-lab-btn" id="card-lab-btn">Run Demo</button>
+        </div>
+
+        <div class="card-nav-row">
+          <div class="card-nav-btns">
+            <button type="button" class="card-nav-btn" id="card-prev-btn" title="Previous Principle (←)">← Prev</button>
+            <button type="button" class="card-nav-btn" id="card-next-btn" title="Next Principle (→)">Next →</button>
+          </div>
+          <span class="card-meta-credit">Shortcuts: [1-8] · [S] Spec · [F] Flip</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 2. FLOATING DYNAMIC ISLAND DOCK (Bottom-Center, Zero Occlusion of Side Planets/CTA) -->
+    <nav class="gestalt-dock" id="gestalt-dock" aria-label="Gestalt Principles Navigation Dock">
+      <div class="dock-tag">
+        <span class="dock-status-dot"></span>
+        <span class="dock-title">Gestalt Mode</span>
+      </div>
+
+      <!-- 8 Numbered Boxes -->
+      <div class="dock-boxes" id="dock-boxes">
+        <button type="button" class="dock-box is-active" data-id="figureground" data-index="1" title="1. Figure-Ground">
+          <span class="dock-box-num">1</span>
+          <span class="dock-box-label">Fig-Ground</span>
+        </button>
+        <button type="button" class="dock-box" data-id="proximity" data-index="2" title="2. Proximity">
+          <span class="dock-box-num">2</span>
+          <span class="dock-box-label">Proximity</span>
+        </button>
+        <button type="button" class="dock-box" data-id="continuity" data-index="3" title="3. Continuity">
+          <span class="dock-box-num">3</span>
+          <span class="dock-box-label">Continuity</span>
+        </button>
+        <button type="button" class="dock-box" data-id="focalpoint" data-index="4" title="4. Focal Point">
+          <span class="dock-box-num">4</span>
+          <span class="dock-box-label">Focal Pt</span>
+        </button>
+        <button type="button" class="dock-box" data-id="closure" data-index="5" title="5. Closure">
+          <span class="dock-box-num">5</span>
+          <span class="dock-box-label">Closure</span>
+        </button>
+        <button type="button" class="dock-box" data-id="symmetry" data-index="6" title="6. Symmetry">
+          <span class="dock-box-num">6</span>
+          <span class="dock-box-label">Symmetry</span>
+        </button>
+        <button type="button" class="dock-box" data-id="similarity" data-index="7" title="7. Similarity">
+          <span class="dock-box-num">7</span>
+          <span class="dock-box-label">Similarity</span>
+        </button>
+        <button type="button" class="dock-box" data-id="commonfate" data-index="8" title="8. Common Fate">
+          <span class="dock-box-num">8</span>
+          <span class="dock-box-label">Fate</span>
+        </button>
+      </div>
+
+      <div class="dock-actions">
+        <button type="button" class="dock-tool-btn" id="dock-spec-btn" title="Toggle Design Spec Grid & Metrics (Key: S)">📐 Spec</button>
+        <button type="button" class="dock-tool-btn" id="dock-author-btn" title="View Student Author Details">
+          <img src="tushar.jpeg" alt="" style="width:16px; height:16px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:3px; border:1px solid var(--cyan);">
+          <span>Dossier</span>
+        </button>
+        <button type="button" class="dock-exit-btn" id="dock-exit-btn" title="Exit Gestalt Mode (Key: Esc)">✕ Exit</button>
+      </div>
+    </nav>
+
+    <!-- 3. DESIGN SPEC BLUEPRINT OVERLAY LAYER -->
+    <div class="spec-layer" id="spec-layer">
+      <!-- Live Calculation HUD -->
+      <div class="spec-hud-metric">
+        <div style="color:var(--cyan); font-weight:700; letter-spacing:1px; margin-bottom:2px;">📐 DESIGN SPEC SYSTEM</div>
+        <div>Scale Engine: <span id="spec-u-val" style="color:var(--cyan); font-weight:600;">1u = --px</span></div>
+        <div>Reference Grid: 1353 × 1163 px</div>
+        <div>Centerline: x = 664u (Optical Center)</div>
+        <div>Interaction Plane: y = 597u (CTA Baseline)</div>
+      </div>
+      <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;">
+        <line x1="50%" y1="0" x2="50%" y2="100%" stroke="rgba(121,220,232,0.35)" stroke-width="1.2" stroke-dasharray="6,4"/>
+        <line x1="0" y1="50%" x2="100%" y2="50%" stroke="rgba(121,220,232,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+      </svg>
+    </div>
+
+    <!-- Student Author Details Modal Popup (Design for Engineers Folio) -->
+    <div class="student-modal-backdrop" id="student-modal">
+      <div class="student-modal">
+        <button class="student-modal-close" id="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+
+        <div class="student-header-flex">
+          <div class="student-avatar-wrap">
+            <img src="tushar.jpeg" alt="Tushar Kalyanrao Kaldate" class="student-avatar-img">
+            <span class="student-avatar-badge" title="Student Engineer">🎓</span>
+          </div>
+          <div class="student-title-wrap">
+            <div class="student-course-badge">Design for Engineers — Course Project</div>
+            <h3 class="student-name">Tushar Kalyanrao Kaldate</h3>
+            <p class="student-sub">Computer Engineering · Batch T1</p>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:16px; margin-bottom:16px; font-size:13.5px; line-height:1.75; color:rgba(255,255,255,.92);">
+          <div><b style="color:#fff;">PRN :</b> 202401040191</div>
+          <div><b style="color:#fff;">Branch :</b> Computer Engineering</div>
+          <div><b style="color:#fff;">Batch :</b> T1</div>
+          <div><b style="color:#fff;">Course :</b> Design for Engineers</div>
+          <div><b style="color:#fff;">Project :</b> SpaceEdu Gestalt Planetary Hero UI Experience</div>
+        </div>
+
+        <div style="margin-bottom:16px; background:rgba(121,220,232,.06); border:1px solid rgba(121,220,232,.2); border-radius:14px; padding:14px;">
+          <div style="font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--cyan); margin-bottom:8px;">
+            ✦ Gestalt Engineering Rubric Checklist:
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px; color:rgba(255,255,255,.85);">
+            <div>✓ 1. Figure-Ground Segregation</div>
+            <div>✓ 2. Typographic Proximity</div>
+            <div>✓ 3. Orbital Continuity</div>
+            <div>✓ 4. Primary Focal Point</div>
+            <div>✓ 5. Spherical Closure (3D)</div>
+            <div>✓ 6. Bilateral Symmetry</div>
+            <div>✓ 7. Controller Similarity</div>
+            <div>✓ 8. Common Fate (0.22s)</div>
+          </div>
+        </div>
+
+        <p style="font-size:14px; color:var(--cyan); font-style:italic; text-align:center; margin:0;">
+          &ldquo;Made with love for design for engineers.&rdquo;
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================
+       SECTION 1: GET STARTED / INDUCTION PROTOCOL
+       ======================================================================== -->
+  <section class="section-outer" id="get-started">
+    <div class="section-wrap">
+      <div class="sec-header">
+        <div class="sec-badge"><span class="dot"></span> INITIATION PROTOCOL // PHASE 01</div>
+        <h2 class="sec-title">Begin Your <i>Planetary</i> Commission</h2>
+        <p class="sec-lede">
+          Step into the next epoch of human spaceflight. Calibrate your telemetry stream, configure your orbital specialization track, and generate your authenticated SpaceEdu flight pass.
+        </p>
+      </div>
+
+      <div class="induction-grid">
+        <!-- 3-Step Protocol -->
+        <div class="induction-steps-wrap">
+          <div class="protocol-card">
+            <div class="protocol-num">01</div>
+            <div class="protocol-content">
+              <h4>Keplerian Mechanics & Cognitive Baseline</h4>
+              <p>Verify fundamental comprehension of two-body orbital mechanics, state vectors, vis-viva velocity equations, and coordinate transformation matrices.</p>
+              <div class="protocol-tag">Syllabus Check: Orbital Physics 101</div>
+            </div>
+          </div>
+
+          <div class="protocol-card">
+            <div class="protocol-num">02</div>
+            <div class="protocol-content">
+              <h4>Hardware-in-the-Loop Thruster Simulator</h4>
+              <p>Conduct cold-gas and hypergolic attitude control simulations. Calibrate reaction wheel angular momentum and star-tracker attitude quaternions in real time.</p>
+              <div class="protocol-tag">Lab Kit: SDR & Telemetry Receiver Included</div>
+            </div>
+          </div>
+
+          <div class="protocol-card">
+            <div class="protocol-num">03</div>
+            <div class="protocol-content">
+              <h4>Research Commission & ABET Capstone</h4>
+              <p>Join Flight Wing T1 to design, validate, and launch real CubeSat sub-payloads. Earn academic credits aligned with Computer Engineering & Aerospace curricula.</p>
+              <div class="protocol-tag">Accreditation: ABET & IEEE Aerospace Aligned</div>
+            </div>
+          </div>
+
+          <div class="induction-action-row">
+            <a href="#tuition" class="btn-pill-outline">View Academic Tuition & Grants →</a>
+            <button type="button" class="btn-pill-outline" id="download-syllabus-btn">
+              <span>📄 Download Syllabus (PDF)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive Holographic Boarding Pass Station -->
+        <div class="bezel-shell pass-generator-shell">
+          <div class="bezel-card pass-generator-card">
+            <div class="card-kicker">✦ CADET TELEMETRY TERMINAL</div>
+            <h3 class="pass-card-title">Orbital Boarding Pass Generator</h3>
+            
+            <div class="pass-form-grid">
+              <div class="pass-field">
+                <label for="cadet-name-input">Cadet Call Sign / Name</label>
+                <input type="text" id="cadet-name-input" value="Tushar Kaldate" placeholder="Enter your full name">
+              </div>
+
+              <div class="pass-field">
+                <label for="cadet-track-select">Specialization Track</label>
+                <select id="cadet-track-select">
+                  <option value="Astrodynamics & Trajectory Design">Astrodynamics & Trajectory Design</option>
+                  <option value="Planetary Atmospheric Entry & TPS">Planetary Atmospheric Entry & TPS</option>
+                  <option value="Deep Space Optical Telemetry">Deep Space Optical Telemetry</option>
+                  <option value="Human-Machine Spacecraft HUDs">Human-Machine Spacecraft HUDs (Gestalt)</option>
+                </select>
+              </div>
+
+              <div class="pass-field">
+                <label>Deployment Outpost</label>
+                <div class="outpost-pills" id="outpost-pills">
+                  <button type="button" class="outpost-pill is-active" data-dest="Earth LEO Orbital Station (340 km)">Earth LEO</button>
+                  <button type="button" class="outpost-pill" data-dest="Venus Cloud Laboratory (55 km)">Venus Outpost</button>
+                  <button type="button" class="outpost-pill" data-dest="Mars Jezero Surface Colony (225M km)">Mars Colony</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Holographic Boarding Pass Ticket -->
+            <div class="holo-ticket" id="holo-ticket">
+              <div class="ticket-top">
+                <div class="ticket-brand">
+                  <span class="ticket-logo">space<i>edu</i></span>
+                  <span class="ticket-tag">FLIGHT COMMISSION // ORBITAL TICKET</span>
+                </div>
+                <div class="ticket-status-pill" id="ticket-status-pill">
+                  <span class="dot"></span> READY TO FILE
+                </div>
+              </div>
+
+              <div class="ticket-divider"></div>
+
+              <div class="ticket-body">
+                <div class="ticket-meta-grid">
+                  <div class="t-col">
+                    <div class="t-lbl">CADET / PASSENGER</div>
+                    <div class="t-val" id="t-passenger-val">CADET TUSHAR KALDATE</div>
+                  </div>
+                  <div class="t-col">
+                    <div class="t-lbl">CADET ID / PRN</div>
+                    <div class="t-val highlight">202401040191-T1</div>
+                  </div>
+                  <div class="t-col full">
+                    <div class="t-lbl">MISSION TRACK</div>
+                    <div class="t-val" id="t-track-val">Astrodynamics & Trajectory Design</div>
+                  </div>
+                  <div class="t-col full">
+                    <div class="t-lbl">TARGET OUTPOST</div>
+                    <div class="t-val" id="t-dest-val">Earth LEO Orbital Station (340 km)</div>
+                  </div>
+                  <div class="t-col">
+                    <div class="t-lbl">FLIGHT VECTOR</div>
+                    <div class="t-val">04.28.91 AU / INC 28.5°</div>
+                  </div>
+                  <div class="t-col">
+                    <div class="t-lbl">SECURITY CLEARANCE</div>
+                    <div class="t-val" style="color:var(--cyan);">LEVEL 4 // RESEARCH</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ticket-footer">
+                <div class="ticket-barcode">
+                  <div class="barcode-lines"></div>
+                  <div class="barcode-num">SE-2026-T1-0191-ORION</div>
+                </div>
+                <button type="button" class="btn-pill" id="claim-ticket-btn">
+                  <span>✦ Authenticate Flight Pass</span>
+                  <span class="btn-pill-icon">↗</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SECTION 2: TUITION MATRIX & FELLOWSHIP GRANTS
+       ======================================================================== -->
+  <section class="section-outer alt-bg" id="tuition">
+    <div class="section-wrap">
+      <div class="sec-header centered">
+        <div class="sec-badge"><span class="dot"></span> ACADEMIC FELLOWSHIP MATRIX</div>
+        <h2 class="sec-title">Transparent Investment in <i>Deep Space</i> Science</h2>
+        <p class="sec-lede">
+          Direct institutional access to live planetary telemetry, physical SDR flight hardware kits, supercomputing clusters, and mission control mentorship. No hidden fees.
+        </p>
+
+        <!-- Frequency Toggle -->
+        <div class="tuition-freq-toggle-wrap">
+          <span class="freq-label" id="freq-lbl-q">Quarterly Orbit</span>
+          <button type="button" class="freq-switch" id="tuition-freq-switch" aria-label="Toggle quarterly or annual billing" aria-pressed="false">
+            <span class="freq-switch-knob"></span>
+          </button>
+          <span class="freq-label" id="freq-lbl-a">Full Mission Year <span class="discount-badge">Save 20%</span></span>
+        </div>
+      </div>
+
+      <!-- 3 Pricing Cards -->
+      <div class="pricing-grid">
+        <!-- Tier 1 -->
+        <div class="bezel-shell">
+          <div class="bezel-card">
+            <div class="plan-header">
+              <span class="plan-tier-eyebrow">FOUNDATIONAL EXPLORATION</span>
+              <h3 class="plan-name">Orbital Auditor</h3>
+              <p class="plan-summary">Self-paced telemetry and astrophysics curriculum for independent researchers.</p>
+            </div>
+            <div class="plan-price-wrap">
+              <span class="plan-currency">$</span>
+              <span class="plan-amount" data-quarterly="340" data-annual="272">340</span>
+              <span class="plan-period">/ quarter</span>
+            </div>
+            <div class="plan-features">
+              <div class="feat-item">✓ 12 Planetary Exploration video modules</div>
+              <div class="feat-item">✓ Full access to High-Def video archives</div>
+              <div class="feat-item">✓ 8 Gestalt Human-Machine UI inspector labs</div>
+              <div class="feat-item">✓ SpaceEdu Ground Control discord access</div>
+              <div class="feat-item">✓ Automated orbital trajectory problem sets</div>
+              <div class="feat-item">✓ Verified Certificate of Completion</div>
+            </div>
+            <button type="button" class="btn-pill-outline plan-cta" data-plan="Orbital Auditor">Audit Curriculum →</button>
+          </div>
+        </div>
+
+        <!-- Tier 2 (Featured) -->
+        <div class="bezel-shell is-featured">
+          <div class="bezel-card">
+            <div class="featured-badge">★ RECOMMENDED FOR BATCH T1 ENGINEERS</div>
+            <div class="plan-header">
+              <span class="plan-tier-eyebrow" style="color:var(--cyan);">ACCREDITED DEGREE TRACK</span>
+              <h3 class="plan-name">Planetary Scholar</h3>
+              <p class="plan-summary">Hardware-in-the-loop laboratory kits, live telemetry simulators, and faculty mentorship.</p>
+            </div>
+            <div class="plan-price-wrap">
+              <span class="plan-currency">$</span>
+              <span class="plan-amount" data-quarterly="890" data-annual="712">890</span>
+              <span class="plan-period">/ quarter</span>
+            </div>
+            <div class="plan-features">
+              <div class="feat-item highlight">★ <b>Physical SDR Telemetry Receiver Kit</b> shipped to you</div>
+              <div class="feat-item">✓ Everything in Orbital Auditor</div>
+              <div class="feat-item">✓ Weekly live Mission Control simulated flights</div>
+              <div class="feat-item">✓ 1-on-1 Mentorship with JPL/ESA researchers</div>
+              <div class="feat-item">✓ ABET-aligned Computer & Aerospace Engineering credits</div>
+              <div class="feat-item">✓ Live telemetry downlink access from Mars & Venus probes</div>
+            </div>
+            <button type="button" class="btn-pill plan-cta" data-plan="Planetary Scholar">
+              <span>Enroll as Scholar</span>
+              <span class="btn-pill-icon">↗</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="bezel-shell">
+          <div class="bezel-card">
+            <div class="plan-header">
+              <span class="plan-tier-eyebrow">HARDWARE PAYLOAD COMMISSION</span>
+              <h3 class="plan-name">Mission Fellow</h3>
+              <p class="plan-summary">Dedicated satellite hardware berth, supercomputing allocations, and paper co-authorship.</p>
+            </div>
+            <div class="plan-price-wrap">
+              <span class="plan-currency">$</span>
+              <span class="plan-amount" data-quarterly="1850" data-annual="1480">1850</span>
+              <span class="plan-period">/ quarter</span>
+            </div>
+            <div class="plan-features">
+              <div class="feat-item highlight">★ <b>Real 1U CubeSat Payload Launch Slot</b> in LEO</div>
+              <div class="feat-item">✓ Everything in Planetary Scholar</div>
+              <div class="feat-item">✓ Dedicated supercomputing cluster GPU hours</div>
+              <div class="feat-item">✓ Co-authorship on AIAA / IEEE Aerospace papers</div>
+              <div class="feat-item">✓ Cleanroom thermal vacuum test data access</div>
+              <div class="feat-item">✓ Priority recruitment pipeline with space agencies</div>
+            </div>
+            <button type="button" class="btn-pill-outline plan-cta" data-plan="Mission Fellow">Apply for Fellowship →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grant Calculator -->
+      <div class="bezel-shell grant-calc-shell">
+        <div class="bezel-card grant-calc-card">
+          <div class="grant-flex">
+            <div class="grant-info">
+              <span class="sec-badge"><span class="dot"></span> ENGINEERING MERIT GRANTS</span>
+              <h3 style="font-family:var(--font-serif); font-size:26px; color:#fff; margin-bottom:8px;">Calculate Your Academic Fellowship Subsidy</h3>
+              <p style="color:rgba(255,255,255,0.72); font-size:14.5px; line-height:1.6; max-width:540px;">
+                SpaceEdu grants merit subsidies up to 75% for Computer Engineering, Electrical, and Aerospace scholars (including Pune University Batch T1 cohorts).
+              </p>
+            </div>
+            <div class="grant-controls">
+              <div class="grant-input-group">
+                <label for="grant-branch-select">Engineering Branch</label>
+                <select id="grant-branch-select">
+                  <option value="0.50">Computer Engineering (Batch T1 Honors)</option>
+                  <option value="0.45">Aerospace & Astronautics</option>
+                  <option value="0.35">Mechanical / Robotics</option>
+                  <option value="0.30">Physics & Mathematics</option>
+                </select>
+              </div>
+              <div class="grant-input-group">
+                <label for="grant-gpa-select">Academic Distinction</label>
+                <select id="grant-gpa-select">
+                  <option value="0.25">Distinction / Dean's List (> 9.0 CGPA)</option>
+                  <option value="0.15">First Class with Distinction</option>
+                  <option value="0.05">Standard Academic Standing</option>
+                </select>
+              </div>
+              <div class="grant-result-box" id="grant-result-box">
+                <div class="grant-pct-val" id="grant-pct-val">75% SUBSIDY</div>
+                <div class="grant-amount-text" id="grant-amount-text">Estimated savings: $667.50 / quarter on Planetary Scholar</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SECTION 3: TUTORIALS & INTERACTIVE DELTA-V SIMULATOR
+       ======================================================================== -->
+  <section class="section-outer" id="tutorials">
+    <div class="section-wrap">
+      <div class="sec-header">
+        <div class="sec-badge"><span class="dot"></span> MISSION LABS // TELEMETRY WORKSHOP</div>
+        <h2 class="sec-title">Hands-On <i>Astrophysics & Spacecraft</i> Systems</h2>
+        <p class="sec-lede">
+          Rigorous technical modules bridging theoretical Keplerian dynamics with practical flight software, human-machine cockpit interfaces, and deep space telemetry.
+        </p>
+      </div>
+
+      <!-- Interactive Delta-V Simulator -->
+      <div class="bezel-shell sim-lab-shell">
+        <div class="bezel-card sim-lab-card">
+          <div class="sim-header-row">
+            <div>
+              <span class="card-kicker">✦ LIVE INTERACTIVE LAB</span>
+              <h3 class="sim-title">Hohmann Transfer Trajectory & Delta-V Calculator</h3>
+              <p class="sim-subtitle">Simulate real celestial transfer maneuvers between interplanetary orbits and calculate propellant requirements in real-time.</p>
+            </div>
+            <div class="sim-tag">Physics Engine: Vis-Viva Eq</div>
+          </div>
+
+          <div class="sim-interactive-grid">
+            <div class="sim-controls-pane">
+              <div class="sim-control-group">
+                <label>Origin Body</label>
+                <div class="sim-body-btns" id="sim-origin-btns">
+                  <button type="button" class="sim-btn is-active" data-body="earth">🌍 Earth (1.0 AU)</button>
+                  <button type="button" class="sim-btn" data-body="venus">🟡 Venus (0.72 AU)</button>
+                  <button type="button" class="sim-btn" data-body="mars">🔴 Mars (1.52 AU)</button>
+                </div>
+              </div>
+
+              <div class="sim-control-group">
+                <label>Destination Body</label>
+                <div class="sim-body-btns" id="sim-target-btns">
+                  <button type="button" class="sim-btn" data-body="earth">🌍 Earth (1.0 AU)</button>
+                  <button type="button" class="sim-btn" data-body="venus">🟡 Venus (0.72 AU)</button>
+                  <button type="button" class="sim-btn is-active" data-body="mars">🔴 Mars (1.52 AU)</button>
+                </div>
+              </div>
+
+              <div class="sim-control-group">
+                <label>Spacecraft Wet Mass: <span id="sim-mass-val" style="color:var(--cyan); font-weight:700;">4,500 kg</span></label>
+                <input type="range" id="sim-mass-slider" min="1000" max="15000" step="500" value="4500" class="sim-slider">
+              </div>
+
+              <div class="sim-control-group">
+                <label>Propulsion Type</label>
+                <select id="sim-prop-select" class="sim-select">
+                  <option value="380">Methane / LOX Staged (Isp = 380s)</option>
+                  <option value="450">Hydrolox Cryogenic (Isp = 450s)</option>
+                  <option value="315">Hypergolic Hydrazine / NTO (Isp = 315s)</option>
+                  <option value="3000">Hall-Effect Ion Thruster (Isp = 3,000s)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sim-visual-pane">
+              <!-- Live SVG Orbital Arc Canvas -->
+              <div class="sim-svg-wrap">
+                <svg id="sim-orbit-svg" viewBox="0 0 400 240" class="sim-orbit-svg">
+                  <circle cx="200" cy="120" r="14" fill="#ffd15c" filter="url(#glow)"/>
+                  <circle cx="200" cy="120" r="17" fill="rgba(255,209,92,0.2)"/>
+                  <circle id="svg-orbit-inner" cx="200" cy="120" r="48" fill="none" stroke="rgba(121,220,232,0.3)" stroke-width="1.2" stroke-dasharray="4,4"/>
+                  <circle id="svg-orbit-outer" cx="200" cy="120" r="88" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" stroke-dasharray="4,4"/>
+                  <path id="svg-transfer-path" d="M 200 72 A 68 68 0 0 1 200 208" fill="none" stroke="#79dce8" stroke-width="2.5" stroke-dasharray="6,4"/>
+                  <circle id="svg-planet-origin" cx="200" cy="72" r="6" fill="#79dce8"/>
+                  <circle id="svg-planet-target" cx="200" cy="208" r="7" fill="#ff7043"/>
+                </svg>
+              </div>
+
+              <!-- Live HUD Telemetry Readouts -->
+              <div class="sim-hud-grid">
+                <div class="sim-hud-item">
+                  <span class="hud-label">TOTAL DELTA-V (Δv)</span>
+                  <span class="hud-value" id="hud-deltav">5.59 km/s</span>
+                </div>
+                <div class="sim-hud-item">
+                  <span class="hud-label">TRANSFER DURATION</span>
+                  <span class="hud-value" id="hud-duration">259 Days</span>
+                </div>
+                <div class="sim-hud-item">
+                  <span class="hud-label">PHASE ANGLE AT LAUNCH</span>
+                  <span class="hud-value" id="hud-angle">44.3° Lead</span>
+                </div>
+                <div class="sim-hud-item">
+                  <span class="hud-label">PROPELLANT REQUIRED</span>
+                  <span class="hud-value" id="hud-fuel">3,480 kg (77%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="tut-filter-row">
+        <button type="button" class="tut-tab is-active" data-filter="all">All Modules (6)</button>
+        <button type="button" class="tut-tab" data-filter="astrodynamics">Astrodynamics</button>
+        <button type="button" class="tut-tab" data-filter="spacecraft">Spacecraft Systems</button>
+        <button type="button" class="tut-tab" data-filter="design">Design for Engineers</button>
+      </div>
+
+      <!-- 6-Card Tutorials Grid -->
+      <div class="tutorials-grid" id="tutorials-grid">
+        <!-- Card 1 -->
+        <div class="bezel-shell tut-item" data-cat="astrodynamics">
+          <div class="bezel-card">
+            <div class="tut-top">
+              <span class="tut-badge">ASTRODYNAMICS</span>
+              <span class="tut-time">⏱ 48 MIN</span>
+            </div>
+            <h4 class="tut-title">Hohmann Transfer Trajectories: Earth to Mars Insertion</h4>
+            <p class="tut-desc">Derive vis-viva velocity equations, calculate hyperbola capture orbits, and map the optimal aerodynamic aerobraking corridor.</p>
+            <div class="tut-footer">
+              <span class="tut-diff">Level: Intermediate</span>
+              <button type="button" class="tut-open-btn" data-tut-idx="0">Launch Lab ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bezel-shell tut-item" data-cat="spacecraft">
+          <div class="bezel-card">
+            <div class="tut-top">
+              <span class="tut-badge">AEROTHERMODYNAMICS</span>
+              <span class="tut-time">⏱ 62 MIN</span>
+            </div>
+            <h4 class="tut-title">Venusian Aerocapture & Thermal Protection Systems</h4>
+            <p class="tut-desc">Analyze hypersonic shockwave stagnation pressures and carbon-phenolic ablator degradation in supercritical CO2 atmosphere.</p>
+            <div class="tut-footer">
+              <span class="tut-diff">Level: Advanced</span>
+              <button type="button" class="tut-open-btn" data-tut-idx="1">Launch Lab ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bezel-shell tut-item" data-cat="astrodynamics">
+          <div class="bezel-card">
+            <div class="tut-top">
+              <span class="tut-badge">ORBITAL MECHANICS</span>
+              <span class="tut-time">⏱ 35 MIN</span>
+            </div>
+            <h4 class="tut-title">Gravitational Assist Slingshots: Voyager & Cassini Pathways</h4>
+            <p class="tut-desc">Model hyperbolic flyby energy transfers, planetary frame rotations, and angular momentum extraction from gas giants.</p>
+            <div class="tut-footer">
+              <span class="tut-diff">Level: Foundational</span>
+              <button type="button" class="tut-open-btn" data-tut-idx="2">Launch Lab ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 (Design for Engineers special) -->
+        <div class="bezel-shell tut-item is-featured" data-cat="design">
+          <div class="bezel-card">
+            <div class="tut-top">
+              <span class="tut-badge" style="background:rgba(121,220,232,0.15); color:var(--cyan);">DESIGN FOR ENGINEERS // SPECIAL</span>
+              <span class="tut-time">⏱ 54 MIN</span>
+            </div>
+            <h4 class="tut-title">Orbital Gestalt: Human-Machine Interface Design in Spacecraft Cockpits</h4>
+            <p class="tut-desc">Curated by Tushar Kaldate for Design for Engineers: Applying Figure-Ground, Proximity, and Focal Point to Crew Dragon & Orion touchscreens to prevent pilot cognitive overload.</p>
+            <div class="tut-footer">
+              <span class="tut-diff" style="color:var(--cyan);">Curator: Batch T1</span>
+              <button type="button" class="tut-open-btn" data-tut-idx="3">Launch Lab ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="bezel-shell tut-item" data-cat="spacecraft">
+          <div class="bezel-card">
+            <div class="tut-top">
+              <span class="tut-badge">PROPULSION</span>
+              <span class="tut-time">⏱ 75 MIN</span>
+            </div>
+            <h4 class="tut-title">Cryogenic Propulsion & LOX/Methane Staging Dynamics</h4>
+            <p class="tut-desc">Full-flow staged combustion cycles, regenerative channel cooling, turbopump cavitation limits, and thrust chamber throat area sizing.</p>
+            <div class="tut-footer">
+              <span class="tut-diff">Level: Advanced</span>
+              <button type="button" class="tut-open-btn" data-tut-idx="4">Launch Lab ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="bezel-shell tut-item" data-cat="spacecraft">
+          <div class="bezel-card">
+            <div class="tut-top">
+              <span class="tut-badge">TELEMETRY</span>
+              <span class="tut-time">⏱ 40 MIN</span>
+            </div>
+            <h4 class="tut-title">Deep Space Optical Communications (DSOC) & Gigabit Downlinks</h4>
+            <p class="tut-desc">1550 nm laser transceivers, photon-counting nanowire arrays, and sub-microradian optical beam steering across 300 million kilometers.</p>
+            <div class="tut-footer">
+              <span class="tut-diff">Level: Intermediate</span>
+              <button type="button" class="tut-open-btn" data-tut-idx="5">Launch Lab ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SECTION 4: BLOG / DEEP SPACE DISPATCH
+       ======================================================================== -->
+  <section class="section-outer alt-bg" id="blog">
+    <div class="section-wrap">
+      <div class="sec-header">
+        <div class="sec-badge"><span class="dot"></span> RESEARCH DISPATCH // FIELD JOURNAL</div>
+        <h2 class="sec-title">Deep Space <i>Dispatch</i> & Field Dispatches</h2>
+        <p class="sec-lede">
+          Peer-reviewed technical dispatches, expedition logs from planetary analog stations, and engineering reflections on deep space architecture.
+        </p>
+      </div>
+
+      <!-- Lead Article -->
+      <div class="bezel-shell lead-article-shell">
+        <div class="bezel-card lead-article-card">
+          <div class="lead-grid">
+            <div class="lead-content">
+              <div class="lead-meta-row">
+                <span class="lead-issue">COVER STORY // VOL. IV</span>
+                <span class="lead-date">OCTOBER 12, 2026 · 8 MIN READ</span>
+              </div>
+              <h3 class="lead-headline">
+                Artemis III & the Quest for Shackleton Crater: Extracting Lunar Polar Volatiles for Deep Space In-Situ Resource Utilization
+              </h3>
+              <p class="lead-authors">
+                By <b>Dr. Althea Vance</b> & <b>Tushar Kaldate</b> (Student Researcher, Batch T1)
+              </p>
+              <p class="lead-excerpt">
+                Permanently shadowed regions (PSRs) at the lunar South Pole harbor billions of kilograms of water ice trapped at 40 Kelvin. We analyze thermal sublimation drill architectures, cryogenic boil-off mitigation, and solar-powered electrolysis pipelines that will convert lunar ice into rocket propellant for Mars-bound Starships.
+              </p>
+              <div class="lead-action-row">
+                <button type="button" class="btn-pill" id="open-lead-article-btn">
+                  <span>Read Full Dispatch</span>
+                  <span class="btn-pill-icon">↗</span>
+                </button>
+                <span class="lead-cite">AIAA Paper Reference: #SE-2026-LUNAR-0191</span>
+              </div>
+            </div>
+
+            <div class="lead-telemetry-sidebar">
+              <div class="lead-telemetry-box">
+                <div class="t-box-title">LUNAR POLAR TELEMETRY READOUT</div>
+                <div class="t-metric-row">
+                  <span class="t-metric-label">Water Ice Concentration:</span>
+                  <span class="t-metric-val">5.5 wt% (±0.8)</span>
+                </div>
+                <div class="t-metric-row">
+                  <span class="t-metric-label">PSR Ambient Temperature:</span>
+                  <span class="t-metric-val">38.5 K (-234.6°C)</span>
+                </div>
+                <div class="t-metric-row">
+                  <span class="t-metric-label">Solar Mast Elevation:</span>
+                  <span class="t-metric-val">Peak of Eternal Light</span>
+                </div>
+                <div class="t-metric-row">
+                  <span class="t-metric-label">Est. Propellant Yield:</span>
+                  <span class="t-metric-val" style="color:var(--cyan);">1,200 MT / yr LOX/LH2</span>
+                </div>
+                <div class="t-metric-row">
+                  <span class="t-metric-label">Specific Extraction Energy:</span>
+                  <span class="t-metric-val">2.8 kWh / kg H2O</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Supporting Bento Dispatches -->
+      <div class="blog-bento-grid">
+        <!-- Article 1 -->
+        <div class="bezel-shell blog-card-shell">
+          <div class="bezel-card blog-card">
+            <div class="blog-card-cat">ATMOSPHERIC SCIENCES · 5 MIN READ</div>
+            <h4 class="blog-card-title">Atmospheric Super-Rotation on Venus: How 400 km/h Winds Challenge Solar Aircraft Designs</h4>
+            <p class="blog-card-summary">At 55 km altitude, Venus offers Earth-like pressure (1 bar) and temperature (25°C). However, the entire atmosphere rotates 60 times faster than the planet itself. We examine semi-buoyant tandem-wing sailplanes.</p>
+            <div class="blog-card-foot">
+              <span class="blog-author">Dr. Henrik Soren</span>
+              <button type="button" class="blog-read-link" data-article="venus">Read Article →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Article 2 -->
+        <div class="bezel-shell blog-card-shell">
+          <div class="bezel-card blog-card">
+            <div class="blog-card-cat">ROBOTICS & GUIDANCE · 6 MIN READ</div>
+            <h4 class="blog-card-title">Autonomous Hazard Detection and Avoidance (HDA) in Martian Terrain Landers</h4>
+            <p class="blog-card-summary">Real-time flash LiDAR combined with convolutional semantic segmentation allows landers to detect 30cm boulders during terminal descent in Jezero Crater without human ground control delay.</p>
+            <div class="blog-card-foot">
+              <span class="blog-author">Elena Rostova, M.S.</span>
+              <button type="button" class="blog-read-link" data-article="mars">Read Article →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Article 3 -->
+        <div class="bezel-shell blog-card-shell is-featured">
+          <div class="bezel-card blog-card">
+            <div class="blog-card-cat" style="color:var(--cyan);">DESIGN FOR ENGINEERS · 4 MIN READ</div>
+            <h4 class="blog-card-title">Why Gestalt Psychology Prevents Catastrophic Operator Errors in Orbital Mission Control</h4>
+            <p class="blog-card-summary">By Tushar Kaldate: A critical breakdown of the Apollo 11 1202 program alarm. How modern spacecraft glass cockpits exploit Law of Proximity and Focal Point to eliminate perceptual tunnel vision under 4g acceleration.</p>
+            <div class="blog-card-foot">
+              <span class="blog-author" style="color:var(--cyan);">Tushar Kaldate (Batch T1)</span>
+              <button type="button" class="blog-read-link" data-article="gestalt">Read Article →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Newsletter Dispatch Terminal -->
+      <div class="bezel-shell newsletter-shell">
+        <div class="bezel-card newsletter-card">
+          <div class="news-flex">
+            <div>
+              <span class="sec-badge"><span class="dot"></span> TELEMETRY DISPATCH FEED</span>
+              <h3 style="font-family:var(--font-serif); font-size:26px; color:#fff; margin-bottom:6px;">Receive Interplanetary Field Dispatches</h3>
+              <p style="color:rgba(255,255,255,0.72); font-size:14.5px;">Get bi-weekly technical pre-prints, telemetry data dumps, and mission simulation logs delivered to your inbox.</p>
+            </div>
+            <form class="news-form" id="newsletter-form">
+              <input type="email" id="news-email" placeholder="cadet.engineer@university.edu" required>
+              <button type="submit" class="btn-pill" id="news-submit-btn">
+                <span>Subscribe</span>
+                <span class="btn-pill-icon">↗</span>
+              </button>
+            </form>
+          </div>
+          <div class="news-status-msg" id="news-status-msg"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SECTION 5: FOOTER & GROUND CONTROL ATTRIBUTION
+       ======================================================================== -->
+  <footer class="site-footer" id="site-footer">
+    <div class="footer-wrap">
+      <div class="footer-grid">
+        <div class="footer-col brand-col">
+          <a class="logo" href="#hero">space<i>edu</i></a>
+          <p class="footer-tagline">
+            An open aerospace education initiative dedicated to democratizing planetary science, astrodynamics, and spacecraft interface engineering.
+          </p>
+          <div class="footer-telemetry-pill">
+            <span class="dot"></span>
+            <span>GROUND STATION PUNE (18.52° N, 73.85° E) · NOMINAL</span>
+          </div>
+          <div class="footer-time-clock" id="footer-mission-clock">
+            UTC: 00:00:00 · MARS SOL: 4124
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h5 class="footer-col-title">Planetary Exploration</h5>
+          <ul class="footer-links">
+            <li><a href="#hero" class="ft-planet-link" data-planet="earth">Planet Earth (Home)</a></li>
+            <li><a href="#hero" class="ft-planet-link" data-planet="venus">Planet Venus (Atmosphere)</a></li>
+            <li><a href="#hero" class="ft-planet-link" data-planet="mars">Planet Mars (Colony)</a></li>
+            <li><a href="#tutorials">Delta-V Calculator</a></li>
+            <li><a href="#get-started">Cadet Induction Pass</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5 class="footer-col-title">Academic Curriculum</h5>
+          <ul class="footer-links">
+            <li><a href="#tuition">Orbital Auditor ($340)</a></li>
+            <li><a href="#tuition">Planetary Scholar ($890)</a></li>
+            <li><a href="#tuition">Mission Fellow ($1,850)</a></li>
+            <li><a href="#tuition">Engineering Merit Grants</a></li>
+            <li><a href="#tutorials">Astrodynamics Syllabus</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5 class="footer-col-title">Design & Engineering</h5>
+          <ul class="footer-links">
+            <li><a href="#" id="ft-gestalt-trigger">👁️ Open Gestalt Inspector</a></li>
+            <li><a href="#" id="ft-student-trigger">🎓 Student Author Dossier</a></li>
+            <li><a href="#blog">Artemis III Research Paper</a></li>
+            <li><a href="#blog">Human-Machine Cockpit HUDs</a></li>
+            <li><a href="#hero" id="ft-back-top">↑ Return to Orbit (Top)</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom-row">
+        <div class="footer-attribution">
+          Project engineered with precision by <b>Tushar Kalyanrao Kaldate</b> (PRN: <code>202401040191</code>) · Computer Engineering, Batch T1 · Course: <i>Design for Engineers</i>.
+        </div>
+        <div class="footer-copyright">
+          &copy; 2026 SpaceEdu Explorations · All Telemetry Rights Reserved.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       MODALS & TOAST NOTIFICATION
+       ======================================================================== -->
+  <!-- 1. Article Reader Modal -->
+  <div class="article-modal-backdrop" id="article-modal">
+    <div class="modal-sheet">
+      <button type="button" class="modal-close-x" id="article-modal-close" aria-label="Close article">✕</button>
+      <h2 id="modal-article-title">Artemis III & the Quest for Shackleton Crater</h2>
+      <div class="modal-meta" id="modal-article-meta">Dr. Althea Vance & Tushar Kaldate · October 12, 2026 · Field Research</div>
+      <div class="modal-prose" id="modal-article-body">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Tutorial Lab Modal -->
+  <div class="lab-modal-backdrop" id="lab-modal">
+    <div class="modal-sheet">
+      <button type="button" class="modal-close-x" id="lab-modal-close" aria-label="Close lab">✕</button>
+      <h2 id="modal-lab-title">Hohmann Transfer Trajectories: Earth to Mars Insertion</h2>
+      <div class="modal-meta" id="modal-lab-meta">Astrodynamics · 48 min · Intermediate</div>
+      <div class="modal-prose" id="modal-lab-body">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Toast Notification Component -->
+  <div class="toast-notify" id="toast-notify">
+    <span class="toast-icon">🚀</span>
+    <span id="toast-msg">Notification message</span>
+  </div>
+       SCRIPTS: ENTRANCE ANIMATION, PLANET SWITCHER, BURGER, GESTALT CONTROLLER
+       ======================================================================== -->
+  <script>
+    (function(){
+      /* ======================================================================
+         8. ENTRANCE ANIMATION DRIVER
+         ====================================================================== */
+      if (document.documentElement.classList.contains('anim')) {
+        var startAnim = function() {
+          requestAnimationFrame(function(){
+            requestAnimationFrame(function(){
+              document.documentElement.classList.add('play');
+              setTimeout(function(){
+                document.documentElement.classList.remove('anim', 'play');
+              }, 2150);
+            });
+          });
+        };
+
+        if (document.fonts && document.fonts.ready) {
+          var fontGuard = setTimeout(startAnim, 500);
+          document.fonts.ready.then(function(){
+            clearTimeout(fontGuard);
+            startAnim();
+          }).catch(function(){
+            clearTimeout(fontGuard);
+            startAnim();
+          });
+        } else {
+          setTimeout(startAnim, 500);
+        }
+      }
+
+      /* ======================================================================
+         9. PLANET SWITCHER DATA & BEHAVIOUR
+         ====================================================================== */
+      var ORDER = ['earth', 'venus', 'mars'];
+
+      var PLANETS = {
+        earth: {
+          name: "EARTH",
+          still: "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_508c64b8-a31e-4290-bdfc-1187df70e0a6.png",
+          lede: "Learn more about the fascinating details that we call our home, Planet Earth. Course enrollment <br>starts today. Early Bird tickets typically last a week, don&rsquo;t miss out!"
+        },
+        venus: {
+          name: "VENUS",
+          still: "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_cf55d1d8-7b59-4a64-80da-d72052ae974e.png",
+          lede: "The hottest world in our solar system, wrapped in clouds of sulfuric acid. Course enrollment <br>starts today. Early Bird tickets typically last a week, don&rsquo;t miss out!"
+        },
+        mars: {
+          name: "MARS",
+          still: "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260827_202133_0ba6de7c-285d-43dc-b7ab-8c54c73707cb.png",
+          lede: "The rust-red desert world, home to the tallest volcano we know of. Course enrollment <br>starts today. Early Bird tickets typically last a week, don&rsquo;t miss out!"
+        }
+      };
+
+      var sky = document.getElementById('sky-canvas');
+      var videos = sky.querySelectorAll('video');
+      var titleLine = document.querySelector('h1.title .ent-line');
+      var ledeEl = document.querySelector('p.lede');
+      var btnSlotL = document.querySelector('.planet-l');
+      var btnSlotR = document.querySelector('.planet-r');
+      var labelL = document.querySelector('.label.label-l');
+      var labelR = document.querySelector('.label.label-r');
+
+      var current = null;
+
+      function show(next) {
+        // 1. Bail if unknown or already featured
+        if (!PLANETS[next] || current === next) return;
+
+        // 2. Videos management
+        videos.forEach(function(clip) {
+          if (clip.dataset.planet === next) {
+            if (!clip.src && clip.dataset.src) {
+              clip.src = clip.dataset.src;
+            }
+            clip.classList.add('is-active');
+            var playPromise = clip.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+              playPromise.catch(function(){});
+            }
+          } else {
+            clip.classList.remove('is-active');
+            clip.pause();
+          }
+        });
+
+        // 3. Set .sky background-image to that planet's still
+        sky.style.backgroundImage = 'url("' + PLANETS[next].still + '")';
+
+        // 4. Set h1 textContent
+        if (titleLine) {
+          titleLine.textContent = PLANETS[next].name;
+        }
+
+        // 5. Set p.lede innerHTML
+        if (ledeEl) {
+          ledeEl.innerHTML = PLANETS[next].lede;
+        }
+
+        // 6. Sibling cutouts in slots L and R
+        var rest = ORDER.filter(function(p){ return p !== next; });
+        var leftPlanet = rest[0];
+        var rightPlanet = rest[1];
+
+        // Slot L setup
+        btnSlotL.dataset.planet = leftPlanet;
+        btnSlotL.setAttribute('aria-label', 'Show ' + PLANETS[leftPlanet].name);
+        btnSlotL.querySelectorAll('img').forEach(function(img){
+          if (img.dataset.planet === leftPlanet) {
+            img.classList.add('is-shown');
+          } else {
+            img.classList.remove('is-shown');
+          }
+        });
+        labelL.textContent = PLANETS[leftPlanet].name;
+
+        // Slot R setup
+        btnSlotR.dataset.planet = rightPlanet;
+        btnSlotR.setAttribute('aria-label', 'Show ' + PLANETS[rightPlanet].name);
+        btnSlotR.querySelectorAll('img').forEach(function(img){
+          if (img.dataset.planet === rightPlanet) {
+            img.classList.add('is-shown');
+          } else {
+            img.classList.remove('is-shown');
+          }
+        });
+        labelR.textContent = PLANETS[rightPlanet].name;
+
+        current = next;
+
+        // Re-draw Gestalt guides if mode is active
+        if (document.body.classList.contains('gestalt-active')) {
+          renderGestaltGuides();
+        }
+      }
+
+      function warm(planet) {
+        var clip = sky.querySelector('video[data-planet="' + planet + '"]');
+        if (clip && !clip.src && clip.dataset.src) {
+          clip.preload = 'auto';
+          clip.src = clip.dataset.src;
+          clip.load();
+        }
+      }
+
+      // Warm on hover & focus
+      [btnSlotL, btnSlotR].forEach(function(btn){
+        var warmFn = function(){
+          if (btn.dataset.planet) warm(btn.dataset.planet);
+        };
+        btn.addEventListener('pointerenter', warmFn);
+        btn.addEventListener('focus', warmFn);
+        btn.addEventListener('click', function(){
+          if (btn.dataset.planet) show(btn.dataset.planet);
+        });
+      });
+
+      // Warm all during idle time
+      var warmRemaining = function(){
+        ORDER.forEach(function(p){ warm(p); });
+      };
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(warmRemaining, { timeout: 4000 });
+      } else {
+        setTimeout(warmRemaining, 2500);
+      }
+
+      // Initial show
+      show('earth');
+
+      /* ======================================================================
+         10. BURGER MENU BEHAVIOUR
+         ====================================================================== */
+      var navrow = document.querySelector('.navrow');
+      var burger = document.querySelector('.burger');
+      var siteNav = document.getElementById('site-nav');
+
+      function setBurger(open) {
+        navrow.dataset.open = open ? 'true' : 'false';
+        burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        burger.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      }
+
+      setBurger(false);
+
+      burger.addEventListener('click', function(e){
+        e.stopPropagation();
+        var isOpen = navrow.dataset.open === 'true';
+        setBurger(!isOpen);
+      });
+
+      document.addEventListener('click', function(e){
+        if (navrow.dataset.open === 'true') {
+          if (!siteNav.contains(e.target) && !burger.contains(e.target)) {
+            setBurger(false);
+          }
+        }
+      });
+
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && navrow.dataset.open === 'true') {
+          setBurger(false);
+          burger.focus();
+        }
+      });
+
+      siteNav.querySelectorAll('a').forEach(function(link){
+        link.addEventListener('click', function(){
+          if (navrow.dataset.open === 'true') {
+            setBurger(false);
+          }
+        });
+      });
+
+      /* ======================================================================
+         GESTALT CONTROLLER: FOOTER BAR & SELECTIVE BLUR/HIGHLIGHT
+         ====================================================================== */
+      /* ======================================================================
+         GESTALT CONTROLLER: ZERO-OCCLUSION ARCHITECTURE & LAB EXPERIMENTS
+         ====================================================================== */
+      var GESTALT_DATA = [
+        {
+          id: 'figureground',
+          index: 1,
+          name: 'Law of Figure-Ground',
+          german: 'Figur-Grund-Organisation',
+          desc: 'The human visual cortex organizes visual scenes into an actionable, prominent &ldquo;Figure&rdquo; (foreground text, buttons, rules) and a boundless &ldquo;Ground&rdquo; (deep space planetary video backdrop). High optical contrast allows immediate cognitive separation without ocular fatigue.',
+          takeaway: 'Filters out background noise, directing 100% of initial gaze fixations directly to the educational content.',
+          labTitle: 'Backdrop Contrast Test',
+          labHint: 'Toggle ambient video dimming to verify pop-out',
+          labBtn: 'Toggle Video Dim',
+          runLab: function() {
+            var isDimmed = sky.classList.toggle('lab-dimmed');
+            sky.style.filter = isDimmed ? 'brightness(0.12) blur(10px)' : '';
+          }
+        },
+        {
+          id: 'proximity',
+          index: 2,
+          name: 'Law of Proximity',
+          german: 'Gesetz der N\u00e4he',
+          desc: 'Objects placed close to each other are perceived as belonging to a single semantic entity. Notice how the Eyebrow, serif Planet Headline, Cyan Rule, and Lede paragraph are tightly spaced vertically (188u \u2192 268u \u2192 405u \u2192 433u). All other elements are blurred, demonstrating how this typographic cluster forms one cohesive planetary identity module.',
+          takeaway: 'Enables rapid perceptual chunking so users ingest headline concepts in <120ms before shifting attention to controls.',
+          labTitle: 'Typographic Spacing Cluster',
+          labHint: 'Pulsate cluster envelope bounding box',
+          labBtn: 'Pulse Envelope',
+          runLab: function() {
+            renderPrincipleVisualGuide('proximity', true);
+          }
+        },
+        {
+          id: 'continuity',
+          index: 3,
+          name: 'Law of Continuity',
+          german: 'Gesetz der Kontinuit\u00e4t',
+          desc: 'The human eye naturally follows smooth continuous paths and aligned linear sequences. Notice the highlighted horizontal orbital axis connecting: Left Planet Cutout \u2192 Left Label \u2192 &ldquo;GET STARTED&rdquo; Button \u2192 Right Label \u2192 Right Planet Cutout. The continuous horizontal vector guides the ocular scan path smoothly across interactive touchpoints.',
+          takeaway: 'Eliminates saccadic visual friction, creating an intuitive left-to-right discovery flow across planetary options.',
+          labTitle: 'Saccadic Scanpath Animation',
+          labHint: 'Simulate eye gaze flow across orbital axis',
+          labBtn: '\u25b6 Animate Eye Scan',
+          runLab: function() {
+            animateContinuityScan();
+          }
+        },
+        {
+          id: 'focalpoint',
+          index: 4,
+          name: 'Law of Focal Point',
+          german: 'Gesetz des Brennpunkts',
+          desc: 'An element with distinctive contrast, luminescence, and elevation instantly captures first-order fixation. Here, everything on the entire website is blurred except the glossy white gradient &ldquo;GET STARTED&rdquo; pill button. Its frosted highlights and drop-shadow glow establish an unmistakable, prominent primary affordance.',
+          takeaway: 'Maximizes call-to-action conversion by establishing indisputable visual hierarchy over secondary information.',
+          labTitle: 'Affordance Luminance Test',
+          labHint: 'Trigger primary affordance contrast surge',
+          labBtn: '\u2728 Affordance Surge',
+          runLab: function() {
+            var btn = document.getElementById('main-cta-btn');
+            btn.style.transition = 'all 0.3s ease';
+            btn.style.transform = 'scale(1.18)';
+            btn.style.boxShadow = '0 0 50px #79dce8, 0 0 100px #fff';
+            setTimeout(function(){
+              btn.style.transform = '';
+              btn.style.boxShadow = '';
+            }, 900);
+          }
+        },
+        {
+          id: 'closure',
+          index: 5,
+          name: 'Law of Closure',
+          german: 'Gesetz der Geschlossenheit',
+          desc: 'The human brain automatically completes incomplete figures to perceive whole objects. Both side planets are deliberately cut in half by the left and right screen borders (-69.5u left, -64.7u right). Look at the glowing dashed projection circles: your mind effortlessly fills in the missing 3D spherical arcs outside the screen!',
+          takeaway: 'Evokes massive astronomical scale and boundless celestial space without consuming precious viewport real estate.',
+          labTitle: 'Virtual 3D Arc Projection',
+          labHint: 'Pulse completed celestial spheres beyond screen',
+          labBtn: '\u25ce Pulse Spheres',
+          runLab: function() {
+            renderPrincipleVisualGuide('closure', true);
+          }
+        },
+        {
+          id: 'symmetry',
+          index: 6,
+          name: 'Law of Symmetry & Pr\u00e4gnanz',
+          german: 'Gesetz der Symmetrie & Pr\u00e4gnanz',
+          desc: 'Visual perception inherently seeks balance, order, and simplicity. The entire hero composition is mathematically balanced along the vertical optical centerline (x=664u with --gutter calibration). Equal bilateral visual weight from the flanking planet spheres prevents cognitive disorientation and creates an aura of elegance.',
+          takeaway: 'Stabilizes massive multi-layered astronomical scale with psychological equilibrium and cognitive calm.',
+          labTitle: 'Bilateral Balance Plane',
+          labHint: 'Display optical balance center vectors',
+          labBtn: '\u2696 Centerline Spec',
+          runLab: function() {
+            renderPrincipleVisualGuide('symmetry', true);
+          }
+        },
+        {
+          id: 'similarity',
+          index: 7,
+          name: 'Law of Similarity',
+          german: 'Gesetz der \u00c4hnlichkeit',
+          desc: 'Elements sharing visual characteristics (shape, serif typography, scale, circular curvature, and interaction physics) are assumed to serve equivalent functions. The two flanking planet switchers share identical dimensions, serif typography labels, and hover states, immediately signaling they are parallel controllers.',
+          takeaway: 'Zero learning curve: interacting with one side planet immediately teaches the user how its counterpart operates.',
+          labTitle: 'Component Token Match',
+          labHint: 'Highlight matching interaction geometry',
+          labBtn: '\u29c9 Inspect Match',
+          runLab: function() {
+            renderPrincipleVisualGuide('similarity', true);
+          }
+        },
+        {
+          id: 'commonfate',
+          index: 8,
+          name: 'Law of Common Fate',
+          german: 'Gesetz des gemeinsamen Schicksals',
+          desc: 'Elements that transition, move, or update in synchronized temporal harmony are perceived as part of a unified state machine. When you switch planets, the video opacity crossfade, headline text, lede paragraph, and side cutout artwork all resolve simultaneously in 0.22s, confirming unified system coherence.',
+          takeaway: 'Prevents asynchronous UI flashes, establishing a reliable, predictable mental model for interactive state transitions.',
+          labTitle: 'Live Synchronized Transition',
+          labHint: 'Trigger 0.22s planet state transition',
+          labBtn: '\u25b6 Run Planet Switch',
+          runLab: function() {
+            var currIndex = ORDER.indexOf(current);
+            var nextPlanet = ORDER[(currIndex + 1) % ORDER.length];
+            show(nextPlanet);
+          }
+        }
+      ];
+
+      // Audio feedback synthesizer (Subtle engineering micro-haptic)
+      var audioCtx = null;
+      function playClickTick() {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.015);
+          gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.02);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.02);
+        } catch(e){}
+      }
+
+      // UI element handles
+      var gestaltToggleBtn = document.getElementById('gestalt-toggle-btn');
+      var gestaltHudCard = document.getElementById('gestalt-hud-card');
+      var gestaltDock = document.getElementById('gestalt-dock');
+      var dockBoxes = document.querySelectorAll('.dock-box');
+      var dockExitBtn = document.getElementById('dock-exit-btn');
+      var dockSpecBtn = document.getElementById('dock-spec-btn');
+      var dockAuthorBtn = document.getElementById('dock-author-btn');
+
+      var cardBadge = document.getElementById('card-badge');
+      var cardGermanLaw = document.getElementById('card-german-law');
+      var cardTitle = document.getElementById('card-title');
+      var cardDesc = document.getElementById('card-desc');
+      var cardTakeawayText = document.getElementById('card-takeaway-text');
+      var cardLabTitle = document.getElementById('card-lab-title');
+      var cardLabHint = document.getElementById('card-lab-hint');
+      var cardLabBtn = document.getElementById('card-lab-btn');
+      var cardPrevBtn = document.getElementById('card-prev-btn');
+      var cardNextBtn = document.getElementById('card-next-btn');
+      var cardFlipBtn = document.getElementById('card-flip-btn');
+      var cardMinBtn = document.getElementById('card-min-btn');
+      var cardCloseBtn = document.getElementById('card-close-btn');
+
+      var specLayer = document.getElementById('spec-layer');
+      var specUVal = document.getElementById('spec-u-val');
+      var svgGuidesGroup = document.getElementById('svg-guides-group');
+
+      var studentInfoBtn = document.getElementById('student-info-btn');
+      var studentModal = document.getElementById('student-modal');
+      var modalCloseBtn = document.getElementById('modal-close-btn');
+
+      var currentPrincipleIndex = 0; // 0 to 7
+
+      // Student Modal Listeners
+      [studentInfoBtn, dockAuthorBtn].forEach(function(btn){
+        if (btn) {
+          btn.addEventListener('click', function(){
+            playClickTick();
+            studentModal.classList.add('is-open');
+          });
+        }
+      });
+      modalCloseBtn.addEventListener('click', function(){
+        studentModal.classList.remove('is-open');
+      });
+      studentModal.addEventListener('click', function(e){
+        if (e.target === studentModal) {
+          studentModal.classList.remove('is-open');
+        }
+      });
+
+      // Update Spec HUD metric text
+      function updateSpecMetric() {
+        if (!specUVal) return;
+        var u = Math.min(window.innerWidth / 1353, window.innerHeight / 1163);
+        specUVal.textContent = '1u = ' + u.toFixed(3) + 'px (Viewport: ' + window.innerWidth + '\u00d7' + window.innerHeight + ')';
+      }
+      updateSpecMetric();
+
+      function toggleSpecOverlay(state) {
+        var active = (state !== undefined) ? state : !document.body.classList.contains('spec-active');
+        if (active) {
+          document.body.classList.add('spec-active');
+          updateSpecMetric();
+          dockSpecBtn.style.background = 'var(--cyan)';
+          dockSpecBtn.style.color = 'var(--btn-ink)';
+        } else {
+          document.body.classList.remove('spec-active');
+          dockSpecBtn.style.background = '';
+          dockSpecBtn.style.color = '';
+        }
+      }
+
+      if (dockSpecBtn) {
+        dockSpecBtn.addEventListener('click', function(){
+          playClickTick();
+          toggleSpecOverlay();
+        });
+      }
+
+      function activatePrinciple(index) {
+        if (index < 0) index = GESTALT_DATA.length - 1;
+        if (index >= GESTALT_DATA.length) index = 0;
+        currentPrincipleIndex = index;
+        playClickTick();
+
+        var item = GESTALT_DATA[index];
+
+        // 1. Update body dataset for selective CSS blurring of unrelated elements
+        document.body.dataset.gestalt = item.id;
+
+        // Reset any temporary lab modifications
+        sky.classList.remove('lab-dimmed');
+        sky.style.filter = '';
+
+        // 2. Update active states on the dock buttons
+        dockBoxes.forEach(function(box){
+          if (box.dataset.id === item.id) {
+            box.classList.add('is-active');
+            box.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
+          } else {
+            box.classList.remove('is-active');
+          }
+        });
+
+        // 3. Update the high-readability HUD card
+        cardBadge.textContent = 'PRINCIPLE 0' + item.index + ' / 0' + GESTALT_DATA.length;
+        cardGermanLaw.textContent = item.german;
+        cardTitle.textContent = item.name;
+        cardDesc.innerHTML = item.desc;
+        cardTakeawayText.textContent = item.takeaway;
+        cardLabTitle.textContent = item.labTitle;
+        cardLabHint.textContent = item.labHint;
+        cardLabBtn.textContent = item.labBtn;
+
+        // 4. Render custom glowing SVG guides for this principle
+        renderPrincipleVisualGuide(item.id);
+      }
+
+      function toggleGestaltMode(state) {
+        var activate = (state !== undefined) ? state : !document.body.classList.contains('gestalt-active');
+        playClickTick();
+        if (activate) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          document.body.classList.add('gestalt-active');
+          gestaltToggleBtn.setAttribute('aria-pressed', 'true');
+          activatePrinciple(currentPrincipleIndex);
+        } else {
+          document.body.classList.remove('gestalt-active');
+          document.body.classList.remove('spec-active');
+          gestaltToggleBtn.setAttribute('aria-pressed', 'false');
+          delete document.body.dataset.gestalt;
+          svgGuidesGroup.innerHTML = '';
+          sky.classList.remove('lab-dimmed');
+          sky.style.filter = '';
+        }
+      }
+
+      // Card controls
+      gestaltToggleBtn.addEventListener('click', function(){ toggleGestaltMode(); });
+      dockExitBtn.addEventListener('click', function(){ toggleGestaltMode(false); });
+      cardCloseBtn.addEventListener('click', function(){ toggleGestaltMode(false); });
+
+      cardFlipBtn.addEventListener('click', function(){
+        playClickTick();
+        gestaltHudCard.classList.toggle('is-left');
+      });
+
+      cardMinBtn.addEventListener('click', function(){
+        playClickTick();
+        var isMin = gestaltHudCard.classList.toggle('is-minimized');
+        cardMinBtn.textContent = isMin ? '\u25a1 Max' : '\u2500 Min';
+      });
+
+      cardPrevBtn.addEventListener('click', function(){
+        activatePrinciple(currentPrincipleIndex - 1);
+      });
+      cardNextBtn.addEventListener('click', function(){
+        activatePrinciple(currentPrincipleIndex + 1);
+      });
+
+      cardLabBtn.addEventListener('click', function(){
+        playClickTick();
+        var item = GESTALT_DATA[currentPrincipleIndex];
+        if (item && typeof item.runLab === 'function') {
+          item.runLab();
+        }
+      });
+
+      dockBoxes.forEach(function(box, idx){
+        box.addEventListener('click', function(){
+          activatePrinciple(idx);
+        });
+      });
+
+      // Direct Canvas Element Click-to-Inspect in Gestalt Mode
+      document.addEventListener('click', function(e){
+        if (!document.body.classList.contains('gestalt-active')) return;
+
+        // Don't intercept clicks inside the dock, HUD card, or modal
+        if (gestaltDock.contains(e.target) || gestaltHudCard.contains(e.target) || studentModal.contains(e.target)) {
+          return;
+        }
+
+        var inspectTarget = e.target.closest('[data-inspect]');
+        if (inspectTarget) {
+          e.preventDefault();
+          e.stopPropagation();
+          var targetId = inspectTarget.dataset.inspect;
+          var foundIdx = GESTALT_DATA.findIndex(function(p){ return p.id === targetId; });
+          if (foundIdx !== -1) {
+            activatePrinciple(foundIdx);
+          }
+        }
+      }, true);
+
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e){
+        if (studentModal.classList.contains('is-open')) {
+          if (e.key === 'Escape') {
+            studentModal.classList.remove('is-open');
+          }
+          return;
+        }
+
+        if (document.body.classList.contains('gestalt-active')) {
+          if (e.key >= '1' && e.key <= '8') {
+            var num = parseInt(e.key, 10) - 1;
+            activatePrinciple(num);
+          } else if (e.key === 'ArrowLeft') {
+            activatePrinciple(currentPrincipleIndex - 1);
+          } else if (e.key === 'ArrowRight') {
+            activatePrinciple(currentPrincipleIndex + 1);
+          } else if (e.key === 's' || e.key === 'S') {
+            toggleSpecOverlay();
+          } else if (e.key === 'f' || e.key === 'F') {
+            cardFlipBtn.click();
+          } else if (e.key === 'm' || e.key === 'M') {
+            cardMinBtn.click();
+          } else if (e.key === ' ') {
+            e.preventDefault();
+            cardLabBtn.click();
+          } else if (e.key === 'Escape') {
+            toggleGestaltMode(false);
+          }
+        } else {
+          if (e.key === 'g' || e.key === 'G') {
+            toggleGestaltMode(true);
+          }
+        }
+      });
+
+      function renderGestaltGuides() {
+        if (!document.body.classList.contains('gestalt-active')) return;
+        var item = GESTALT_DATA[currentPrincipleIndex];
+        if (item) renderPrincipleVisualGuide(item.id);
+      }
+
+      function animateContinuityScan() {
+        var leftRect = btnSlotL.getBoundingClientRect();
+        var rightRect = btnSlotR.getBoundingClientRect();
+        var ctaBtn = document.getElementById('main-cta-btn');
+        var ctaRect = ctaBtn.getBoundingClientRect();
+
+        var y = ctaRect.top + ctaRect.height / 2;
+        var startX = leftRect.left;
+        var endX = rightRect.right;
+
+        // Render moving particle dot in SVG
+        var particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        particle.setAttribute('r', '7');
+        particle.setAttribute('fill', '#ffffff');
+        particle.setAttribute('filter', 'url(#glow)');
+        svgGuidesGroup.appendChild(particle);
+
+        var startTime = performance.now();
+        var duration = 950;
+
+        function step(now) {
+          var p = (now - startTime) / duration;
+          if (p > 1) p = 1;
+          var curX = startX + (endX - startX) * p;
+          particle.setAttribute('cx', curX);
+          particle.setAttribute('cy', y);
+          if (p < 1) {
+            requestAnimationFrame(step);
+          } else {
+            setTimeout(function(){
+              if (particle.parentNode) particle.parentNode.removeChild(particle);
+            }, 300);
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+      function renderPrincipleVisualGuide(id, pulse) {
+        svgGuidesGroup.innerHTML = '';
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+
+        if (id === 'closure') {
+          var leftRect = btnSlotL.getBoundingClientRect();
+          var rightRect = btnSlotR.getBoundingClientRect();
+
+          var rL = leftRect.width / 2;
+          var cxL = leftRect.left + rL;
+          var cyL = leftRect.top + rL;
+
+          var rR = rightRect.width / 2;
+          var cxR = rightRect.left + rR;
+          var cyR = rightRect.top + rR;
+
+          var strokeW = pulse ? 3.5 : 2.5;
+
+          svgGuidesGroup.innerHTML = `
+            <circle cx="${cxL}" cy="${cyL}" r="${rL}" fill="rgba(121,220,232,0.06)" stroke="#79dce8" stroke-width="${strokeW}" stroke-dasharray="8,6" filter="url(#glow)"/>
+            <circle cx="${cxR}" cy="${cyR}" r="${rR}" fill="rgba(121,220,232,0.06)" stroke="#79dce8" stroke-width="${strokeW}" stroke-dasharray="8,6" filter="url(#glow)"/>
+            <rect x="${Math.max(12, cxL + rL + 10)}" y="${cyL - 14}" width="260" height="28" rx="6" fill="rgba(4,16,31,0.92)" stroke="#79dce8" stroke-width="1.2"/>
+            <text x="${Math.max(20, cxL + rL + 18)}" y="${cyL + 4}" fill="#79dce8" font-family="'Hanken Grotesk',sans-serif" font-size="12.5" font-weight="600">
+              Completed 3D Sphere (Mind fills arc)
+            </text>
+            <rect x="${Math.min(w - 275, cxR - rR - 270)}" y="${cyR - 14}" width="260" height="28" rx="6" fill="rgba(4,16,31,0.92)" stroke="#79dce8" stroke-width="1.2"/>
+            <text x="${Math.min(w - 265, cxR - rR - 260)}" y="${cyR + 4}" fill="#79dce8" font-family="'Hanken Grotesk',sans-serif" font-size="12.5" font-weight="600">
+              Completed 3D Sphere (Law of Closure)
+            </text>
+          `;
+        } else if (id === 'proximity') {
+          var titleRect = document.querySelector('h1.title').getBoundingClientRect();
+          var ledeRect = document.querySelector('p.lede').getBoundingClientRect();
+          var eyebrowRect = document.querySelector('.eyebrow').getBoundingClientRect();
+
+          var top = eyebrowRect.top - 12;
+          var bottom = ledeRect.bottom + 12;
+          var left = Math.min(titleRect.left, ledeRect.left) - 20;
+          var right = Math.max(titleRect.right, ledeRect.right) + 20;
+
+          var bgFill = pulse ? "rgba(121,220,232,0.14)" : "rgba(121,220,232,0.06)";
+
+          svgGuidesGroup.innerHTML = `
+            <rect x="${left}" y="${top}" width="${right - left}" height="${bottom - top}"
+                  rx="18" fill="${bgFill}" stroke="#79dce8" stroke-width="2.5" stroke-dasharray="10,6" filter="url(#glow)"/>
+            <rect x="${left + 16}" y="${top - 15}" width="250" height="26" rx="6" fill="#04101f" stroke="#79dce8" stroke-width="1.2"/>
+            <text x="${left + 24}" y="${top + 2}" fill="#79dce8" font-family="'Hanken Grotesk',sans-serif" font-size="11.5" font-weight="700">
+              PROXIMITY: UNIFIED CONTENT MODULE
+            </text>
+          `;
+        } else if (id === 'continuity') {
+          var leftRect = btnSlotL.getBoundingClientRect();
+          var rightRect = btnSlotR.getBoundingClientRect();
+          var ctaBtn = document.getElementById('main-cta-btn');
+          var ctaRect = ctaBtn.getBoundingClientRect();
+
+          var y = ctaRect.top + ctaRect.height / 2;
+          svgGuidesGroup.innerHTML = `
+            <path d="M ${leftRect.right} ${y} L ${ctaRect.left} ${y} M ${ctaRect.right} ${y} L ${rightRect.left} ${y}"
+                  stroke="#79dce8" stroke-width="3" stroke-dasharray="8,6" filter="url(#glow)"/>
+            <circle cx="${ctaRect.left}" cy="${y}" r="5" fill="#79dce8"/>
+            <circle cx="${ctaRect.right}" cy="${y}" r="5" fill="#79dce8"/>
+            <rect x="${ctaRect.left - 40}" y="${y + 26}" width="260" height="24" rx="6" fill="rgba(4,16,31,0.92)" stroke="#79dce8" stroke-width="1"/>
+            <text x="${ctaRect.left + 90}" y="${y + 42}" text-anchor="middle" fill="#79dce8" font-family="'Hanken Grotesk',sans-serif" font-size="11.5" font-weight="600">
+              \u2190 Horizontal Orbital Vector \u2192
+            </text>
+          `;
+        } else if (id === 'focalpoint') {
+          var ctaBtn = document.getElementById('main-cta-btn');
+          var ctaRect = ctaBtn.getBoundingClientRect();
+          var cx = ctaRect.left + ctaRect.width / 2;
+          var cy = ctaRect.top + ctaRect.height / 2;
+          var rx = ctaRect.width / 2 + 18;
+          var ry = ctaRect.height / 2 + 18;
+
+          svgGuidesGroup.innerHTML = `
+            <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#79dce8" stroke-width="2.5" stroke-dasharray="6,4" filter="url(#glow)"/>
+            <ellipse cx="${cx}" cy="${cy}" rx="${rx + 24}" ry="${ry + 24}" fill="none" stroke="rgba(121,220,232,0.4)" stroke-width="1.8" stroke-dasharray="4,4"/>
+          `;
+        } else if (id === 'symmetry') {
+          var cx = w / 2;
+          svgGuidesGroup.innerHTML = `
+            <line x1="${cx}" y1="0" x2="${cx}" y2="${h}" stroke="#79dce8" stroke-width="2.2" stroke-dasharray="10,8" filter="url(#glow)"/>
+            <rect x="${cx - 100}" y="${h * 0.14}" width="200" height="28" rx="14" fill="#04101f" stroke="#79dce8" stroke-width="1.5"/>
+            <text x="${cx}" y="${h * 0.14 + 18}" text-anchor="middle" fill="#79dce8" font-family="'Hanken Grotesk',sans-serif" font-size="11.5" font-weight="700">
+              BILATERAL SYMMETRY AXIS
+            </text>
+          `;
+        } else if (id === 'similarity') {
+          var leftRect = btnSlotL.getBoundingClientRect();
+          var rightRect = btnSlotR.getBoundingClientRect();
+          svgGuidesGroup.innerHTML = `
+            <rect x="${leftRect.left - 6}" y="${leftRect.top - 6}" width="${leftRect.width + 12}" height="${leftRect.height + 12}" rx="16" fill="none" stroke="#79dce8" stroke-width="2.5" filter="url(#glow)"/>
+            <rect x="${rightRect.left - 6}" y="${rightRect.top - 6}" width="${rightRect.width + 12}" height="${rightRect.height + 12}" rx="16" fill="none" stroke="#79dce8" stroke-width="2.5" filter="url(#glow)"/>
+          `;
+        } else if (id === 'figureground') {
+          svgGuidesGroup.innerHTML = `
+            <rect x="24" y="24" width="${w - 48}" height="${h - 48}" rx="24" fill="none" stroke="rgba(121,220,232,0.3)" stroke-width="2" stroke-dasharray="12,8"/>
+            <rect x="36" y="38" width="290" height="26" rx="6" fill="#04101f" stroke="#79dce8" stroke-width="1.2"/>
+            <text x="46" y="55" fill="rgba(121,220,232,0.95)" font-family="'Hanken Grotesk',sans-serif" font-size="12" font-weight="600">
+              GROUND: Boundless Celestial Video Canvas
+            </text>
+          `;
+        }
+      }
+
+      window.addEventListener('resize', function(){
+        updateSpecMetric();
+        if (document.body.classList.contains('gestalt-active')) {
+          renderGestaltGuides();
+        }
+      });
+
+      /* ======================================================================
+         INTERACTIVE EXTENSIONS: NEW SECTIONS CONTROLLER
+         ====================================================================== */
+
+      // Helper: Toast Notification
+      var toastEl = document.getElementById('toast-notify');
+      var toastMsgEl = document.getElementById('toast-msg');
+      var toastTimer = null;
+      function showToast(msg, icon) {
+        if (!toastEl) return;
+        if (toastTimer) clearTimeout(toastTimer);
+        toastMsgEl.textContent = msg;
+        var iconEl = toastEl.querySelector('.toast-icon');
+        if (iconEl && icon) iconEl.textContent = icon;
+        toastEl.classList.add('is-shown');
+        toastTimer = setTimeout(function(){
+          toastEl.classList.remove('is-shown');
+        }, 3800);
+      }
+
+      // 1. Navbar Scroll Spy & Active Anchor Highlighting
+      var navbarEl = document.querySelector('.navbar');
+      window.addEventListener('scroll', function(){
+        if (window.scrollY > 40) {
+          navbarEl.classList.add('is-scrolled');
+        } else {
+          navbarEl.classList.remove('is-scrolled');
+        }
+      }, { passive: true });
+
+      var sectionsToTrack = [
+        { id: 'hero', navSel: 'a[data-section="hero"]' },
+        { id: 'tuition', navSel: 'a[data-section="tuition"]' },
+        { id: 'tutorials', navSel: 'a[data-section="tutorials"]' },
+        { id: 'blog', navSel: 'a[data-section="blog"]' },
+        { id: 'get-started', navSel: 'a[data-section="get-started"]' }
+      ];
+
+      if ('IntersectionObserver' in window) {
+        var sectionObserver = new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            if (entry.isIntersecting) {
+              var targetId = entry.target.id;
+              var match = sectionsToTrack.find(function(s){ return s.id === targetId; });
+              if (match) {
+                document.querySelectorAll('#site-nav a').forEach(function(a){
+                  a.removeAttribute('aria-current');
+                });
+                var activeLink = document.querySelector(match.navSel);
+                if (activeLink) activeLink.setAttribute('aria-current', 'page');
+              }
+            }
+          });
+        }, { threshold: 0.25, rootMargin: '-70px 0px -40% 0px' });
+
+        sectionsToTrack.forEach(function(s){
+          var el = document.getElementById(s.id);
+          if (el) sectionObserver.observe(el);
+        });
+      }
+
+      // Smooth scroll for all hash anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(function(anchor){
+        anchor.addEventListener('click', function(e){
+          var href = anchor.getAttribute('href');
+          if (!href || href === '#') return;
+          var target = document.querySelector(href);
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+
+      // Scroll Down Arrow Button in Hero
+      var heroScrollBtn = document.querySelector('.scroll');
+      if (heroScrollBtn) {
+        heroScrollBtn.addEventListener('click', function(){
+          var gs = document.getElementById('get-started');
+          if (gs) gs.scrollIntoView({ behavior: 'smooth' });
+        });
+      }
+
+      // 2. Interactive Holographic Flight Pass Generator
+      var cadetNameInput = document.getElementById('cadet-name-input');
+      var cadetTrackSelect = document.getElementById('cadet-track-select');
+      var outpostPills = document.querySelectorAll('.outpost-pill');
+      var tPassengerVal = document.getElementById('t-passenger-val');
+      var tTrackVal = document.getElementById('t-track-val');
+      var tDestVal = document.getElementById('t-dest-val');
+      var claimTicketBtn = document.getElementById('claim-ticket-btn');
+      var ticketStatusPill = document.getElementById('ticket-status-pill');
+
+      if (cadetNameInput) {
+        cadetNameInput.addEventListener('input', function(){
+          var val = cadetNameInput.value.trim();
+          tPassengerVal.textContent = val ? ('CADET ' + val.toUpperCase()) : 'CADET TUSHAR KALDATE';
+        });
+      }
+
+      if (cadetTrackSelect) {
+        cadetTrackSelect.addEventListener('change', function(){
+          tTrackVal.textContent = cadetTrackSelect.value;
+        });
+      }
+
+      outpostPills.forEach(function(pill){
+        pill.addEventListener('click', function(){
+          outpostPills.forEach(function(p){ p.classList.remove('is-active'); });
+          pill.classList.add('is-active');
+          if (tDestVal && pill.dataset.dest) {
+            tDestVal.textContent = pill.dataset.dest;
+          }
+        });
+      });
+
+      if (claimTicketBtn) {
+        claimTicketBtn.addEventListener('click', function(){
+          playClickTick();
+          ticketStatusPill.innerHTML = '<span class="dot" style="background:#5fd0e1;"></span> COMMISSION AUTHENTICATED';
+          ticketStatusPill.style.background = 'rgba(121,220,232,0.22)';
+          ticketStatusPill.style.borderColor = 'var(--cyan)';
+          claimTicketBtn.innerHTML = '<span>✓ Pass Authenticated & Filed</span>';
+          claimTicketBtn.style.background = 'var(--cyan)';
+          claimTicketBtn.style.color = '#071227';
+          var name = (cadetNameInput && cadetNameInput.value.trim()) || 'Tushar Kaldate';
+          showToast('Clearance Granted: Welcome aboard Cadet ' + name + '! Your orbital credentials have been dispatched.', '🚀');
+        });
+      }
+
+      var downloadSyllabusBtn = document.getElementById('download-syllabus-btn');
+      if (downloadSyllabusBtn) {
+        downloadSyllabusBtn.addEventListener('click', function(){
+          playClickTick();
+          showToast('SpaceEdu 2026-27 Aerospace Curriculum downloaded (Batch T1 ABET Spec).', '📄');
+        });
+      }
+
+      // 3. Tuition Frequency Switch & Engineering Grant Calculator
+      var freqSwitch = document.getElementById('tuition-freq-switch');
+      var planAmounts = document.querySelectorAll('.plan-amount');
+      var isAnnual = false;
+
+      if (freqSwitch) {
+        freqSwitch.addEventListener('click', function(){
+          playClickTick();
+          isAnnual = !isAnnual;
+          freqSwitch.classList.toggle('is-active', isAnnual);
+          freqSwitch.setAttribute('aria-pressed', isAnnual ? 'true' : 'false');
+          planAmounts.forEach(function(amtEl){
+            var val = isAnnual ? amtEl.dataset.annual : amtEl.dataset.quarterly;
+            amtEl.textContent = val;
+            var periodEl = amtEl.parentElement.querySelector('.plan-period');
+            if (periodEl) {
+              periodEl.textContent = isAnnual ? '/ month (annual bill)' : '/ quarter';
+            }
+          });
+          updateGrantCalc();
+        });
+      }
+
+      var grantBranchSelect = document.getElementById('grant-branch-select');
+      var grantGpaSelect = document.getElementById('grant-gpa-select');
+      var grantPctVal = document.getElementById('grant-pct-val');
+      var grantAmountText = document.getElementById('grant-amount-text');
+
+      function updateGrantCalc() {
+        if (!grantBranchSelect || !grantGpaSelect || !grantPctVal || !grantAmountText) return;
+        var bVal = parseFloat(grantBranchSelect.value) || 0.5;
+        var gVal = parseFloat(grantGpaSelect.value) || 0.25;
+        var totalPct = Math.min(85, Math.round((bVal + gVal) * 100));
+        grantPctVal.textContent = totalPct + '% SUBSIDY APPROVED';
+        var baseRate = isAnnual ? 712 : 890;
+        var savings = ((baseRate * totalPct) / 100).toFixed(2);
+        grantAmountText.textContent = 'Estimated savings: $' + savings + ' ' + (isAnnual ? '/ month' : '/ quarter') + ' on Planetary Scholar';
+      }
+
+      if (grantBranchSelect && grantGpaSelect) {
+        grantBranchSelect.addEventListener('change', updateGrantCalc);
+        grantGpaSelect.addEventListener('change', updateGrantCalc);
+      }
+
+      document.querySelectorAll('.plan-cta').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          playClickTick();
+          var plan = btn.dataset.plan || 'Course';
+          var gs = document.getElementById('get-started');
+          if (gs) gs.scrollIntoView({ behavior: 'smooth' });
+          showToast('Selected: ' + plan + '. Complete your cadet flight pass above to finalize registration.', '🎓');
+        });
+      });
+
+      // 4. Interactive Delta-V & Hohmann Transfer Simulator
+      var simOriginBtns = document.querySelectorAll('#sim-origin-btns .sim-btn');
+      var simTargetBtns = document.querySelectorAll('#sim-target-btns .sim-btn');
+      var simMassSlider = document.getElementById('sim-mass-slider');
+      var simMassVal = document.getElementById('sim-mass-val');
+      var simPropSelect = document.getElementById('sim-prop-select');
+
+      var hudDeltaV = document.getElementById('hud-deltav');
+      var hudDuration = document.getElementById('hud-duration');
+      var hudAngle = document.getElementById('hud-angle');
+      var hudFuel = document.getElementById('hud-fuel');
+
+      var svgOrbitInner = document.getElementById('svg-orbit-inner');
+      var svgOrbitOuter = document.getElementById('svg-orbit-outer');
+      var svgTransferPath = document.getElementById('svg-transfer-path');
+      var svgPlanetOrigin = document.getElementById('svg-planet-origin');
+      var svgPlanetTarget = document.getElementById('svg-planet-target');
+
+      var BODY_DATA = {
+        earth: { name: 'Earth', rAU: 1.0, rPx: 64, color: '#79dce8' },
+        venus: { name: 'Venus', rAU: 0.723, rPx: 46, color: '#e8c079' },
+        mars:  { name: 'Mars',  rAU: 1.524, rPx: 96, color: '#ff7043' }
+      };
+
+      var currentOrigin = 'earth';
+      var currentTarget = 'mars';
+
+      function updateSim() {
+        if (!hudDeltaV) return;
+        var oData = BODY_DATA[currentOrigin] || BODY_DATA.earth;
+        var tData = BODY_DATA[currentTarget] || BODY_DATA.mars;
+
+        var r1 = oData.rAU;
+        var r2 = tData.rAU;
+        var mass = parseFloat(simMassSlider.value) || 4500;
+        var isp = parseFloat(simPropSelect.value) || 380;
+
+        if (simMassVal) simMassVal.textContent = mass.toLocaleString() + ' kg';
+
+        if (currentOrigin === currentTarget) {
+          hudDeltaV.textContent = '0.00 km/s (Co-orbital)';
+          hudDuration.textContent = '0 Days';
+          hudAngle.textContent = '0° (Stationary)';
+          hudFuel.textContent = '0 kg (0%)';
+          return;
+        }
+
+        // Keplerian Physics Calculations
+        var aAU = (r1 + r2) / 2;
+        var transferDays = Math.round(182.62 * Math.pow(aAU, 1.5));
+        
+        // Characteristic delta-v (heliocentric transfer + capture approx in km/s)
+        var muSun = 1.327e11; // km^3/s^2
+        var AU_KM = 149597870.7;
+        var r1_km = r1 * AU_KM;
+        var r2_km = r2 * AU_KM;
+        var a_km = aAU * AU_KM;
+
+        var v1_orbit = Math.sqrt(muSun / r1_km);
+        var v1_trans = Math.sqrt(muSun * (2 / r1_km - 1 / a_km));
+        var dv1 = Math.abs(v1_trans - v1_orbit);
+
+        var v2_orbit = Math.sqrt(muSun / r2_km);
+        var v2_trans = Math.sqrt(muSun * (2 / r2_km - 1 / a_km));
+        var dv2 = Math.abs(v2_orbit - v2_trans);
+
+        var totalDeltaV = dv1 + dv2; // km/s
+        var dvDisplay = (totalDeltaV / 1000).toFixed(2); // in km/s
+
+        // Tsiolkovsky Rocket Equation
+        var g0 = 9.80665;
+        var ve = isp * g0; // m/s
+        var dv_ms = totalDeltaV; // m/s
+        var massRatio = Math.exp(dv_ms / ve);
+        var propMass = Math.min(mass * 0.96, Math.max(0, mass * (1 - 1 / massRatio)));
+        var fuelPct = Math.round((propMass / mass) * 100);
+
+        // Lead Angle
+        var leadAngle = Math.round(180 * (1 - Math.pow(aAU / r2, 1.5)));
+
+        hudDeltaV.textContent = dvDisplay + ' km/s';
+        hudDuration.textContent = transferDays + ' Days';
+        hudAngle.textContent = Math.abs(leadAngle) + '° ' + (leadAngle >= 0 ? 'Lead' : 'Lag');
+        hudFuel.textContent = Math.round(propMass).toLocaleString() + ' kg (' + fuelPct + '%)';
+
+        // Update SVG Visuals
+        var cx = 200, cy = 120;
+        var rInner = Math.min(oData.rPx, tData.rPx);
+        var rOuter = Math.max(oData.rPx, tData.rPx);
+
+        if (svgOrbitInner) svgOrbitInner.setAttribute('r', rInner);
+        if (svgOrbitOuter) svgOrbitOuter.setAttribute('r', rOuter);
+
+        if (svgPlanetOrigin) {
+          svgPlanetOrigin.setAttribute('cy', cy - oData.rPx);
+          svgPlanetOrigin.setAttribute('fill', oData.color);
+        }
+        if (svgPlanetTarget) {
+          svgPlanetTarget.setAttribute('cy', cy + tData.rPx);
+          svgPlanetTarget.setAttribute('fill', tData.color);
+        }
+        if (svgTransferPath) {
+          var y1 = cy - oData.rPx;
+          var y2 = cy + tData.rPx;
+          var radY = Math.abs(y2 - y1) / 2;
+          svgTransferPath.setAttribute('d', 'M ' + cx + ' ' + y1 + ' A ' + radY + ' ' + radY + ' 0 0 1 ' + cx + ' ' + y2);
+        }
+      }
+
+      simOriginBtns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          simOriginBtns.forEach(function(b){ b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+          currentOrigin = btn.dataset.body;
+          updateSim();
+        });
+      });
+
+      simTargetBtns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          simTargetBtns.forEach(function(b){ b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+          currentTarget = btn.dataset.body;
+          updateSim();
+        });
+      });
+
+      if (simMassSlider) simMassSlider.addEventListener('input', updateSim);
+      if (simPropSelect) simPropSelect.addEventListener('change', updateSim);
+      updateSim();
+
+      // 5. Tutorials Filter & Lab Reader Modal
+      var tutTabs = document.querySelectorAll('.tut-tab');
+      var tutItems = document.querySelectorAll('.tut-item');
+
+      tutTabs.forEach(function(tab){
+        tab.addEventListener('click', function(){
+          tutTabs.forEach(function(t){ t.classList.remove('is-active'); });
+          tab.classList.add('is-active');
+          var filter = tab.dataset.filter;
+          tutItems.forEach(function(item){
+            if (filter === 'all' || item.dataset.cat === filter) {
+              item.style.display = 'block';
+            } else {
+              item.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      var LAB_MODULES = [
+        {
+          title: "Hohmann Transfer Trajectories: Earth to Mars Insertion",
+          meta: "Astrodynamics · 48 min · Intermediate · ABET Aligned",
+          body: `
+            <h3>1. The Vis-Viva Energy Equation</h3>
+            <p>At the core of orbital maneuvers lies the conservation of specific orbital energy. For any Keplerian orbit around a central gravitational parameter &mu;, the instantaneous orbital velocity <i>v</i> at radius <i>r</i> with semi-major axis <i>a</i> is expressed by:</p>
+            <div class="math-callout">v&sup2; = &mu; (2/r - 1/a)</div>
+            <p>During a Hohmann transfer from Earth (r&#8321; = 1.0 AU) to Mars (r&#8322; = 1.524 AU), the semi-major axis of the elliptical transfer orbit is <i>a = (r&#8321; + r&#8322;) / 2 = 1.262 AU</i>.</p>
+            <h3>2. Delta-V Budget Breakdown</h3>
+            <ul>
+              <li><b>Trans-Mars Injection (&Delta;v&#8321;):</b> 2.94 km/s burn at periapsis in Low Earth Orbit (300 km altitude).</li>
+              <li><b>Mars Orbital Insertion (&Delta;v&#8322;):</b> 2.65 km/s retrograde burn at apoapsis to capture into elliptical Mars orbit.</li>
+              <li><b>Total Budget:</b> ~5.59 km/s (without aerobraking assist).</li>
+            </ul>
+            <h3>3. Flight Simulation Exercise</h3>
+            <p>Adjust periapsis burn timing using the interactive simulator above to account for Mars orbital eccentricity (e = 0.0934).</p>
+          `
+        },
+        {
+          title: "Venusian Aerocapture & Thermal Protection Systems",
+          meta: "Aerothermodynamics · 62 min · Advanced · Spacecraft Systems",
+          body: `
+            <h3>1. Hyperbolic Atmospheric Entry</h3>
+            <p>Entry velocity at Venus exceeds 11.2 km/s. Aerocapture uses atmospheric drag in the dense carbon dioxide atmosphere (92 bar surface pressure) to bleed kinetic energy into an orbit without burning scarce propellant.</p>
+            <div class="math-callout">&Delta;v_saved = 4,100 m/s via single 120-second hypersonic skip</div>
+            <h3>2. Stagnation Heat Flux Equation</h3>
+            <p>Sutton-Graves convective heat flux for blunt bodies:</p>
+            <div class="math-callout">q&#775; = k &radic;(&rho; / R_n) &middot; v&sup3;</div>
+            <p>Peak heat flux exceeds 3,800 W/cm&sup2;. We evaluate 3D-woven phenolic impregnated carbon ablators (PICA-X) with radiative barrier back-shells.</p>
+          `
+        },
+        {
+          title: "Gravitational Assist Slingshots: Voyager & Cassini Pathways",
+          meta: "Orbital Mechanics · 35 min · Foundational · Astrodynamics",
+          body: `
+            <h3>1. Angular Momentum Exchange</h3>
+            <p>A planetary flyby transfers orbital energy from the massive planet to the lightweight spacecraft in the Sun-centered inertial frame:</p>
+            <div class="math-callout">v_out = v_in + 2 v_planet &middot; sin(&delta; / 2)</div>
+            <p>Where &delta; is the hyperbolic deflection angle. Voyager 2 harvested over 18 km/s through successive Jupiter, Saturn, Uranus, and Neptune assists.</p>
+          `
+        },
+        {
+          title: "Orbital Gestalt: Human-Machine Interface Design in Spacecraft Cockpits",
+          meta: "Design for Engineers · 54 min · Project Special · By Tushar Kaldate",
+          body: `
+            <h3>1. Human Cognitive Bandwidth Under 4G High Acceleration</h3>
+            <p>During launch ascent and dynamic re-entry, pilot cardiac blood flow shifts, causing optical tunnel vision (greyout). Telemetry HUDs cannot rely on dense alphanumeric tables.</p>
+            <h3>2. Gestalt Laws in Aerospace Displays</h3>
+            <ul>
+              <li><b>Figure-Ground:</b> Isolating flight-critical velocity vectors against celestial video backgrounds.</li>
+              <li><b>Proximity:</b> Clustering apoapsis, periapsis, and Delta-V into one perceptual chunk.</li>
+              <li><b>Focal Point:</b> Critical warning annunciators (1202 alarms) must possess unmistakable visual weight through luminance and motion segregation.</li>
+            </ul>
+            <div class="math-callout">Reaction Time Reduction: 420ms &rarr; 140ms through Gestalt-compliant HUD hierarchy</div>
+          `
+        },
+        {
+          title: "Cryogenic Propulsion & LOX/Methane Staging Dynamics",
+          meta: "Propulsion Engineering · 75 min · Advanced · Spacecraft Systems",
+          body: `
+            <h3>1. Full-Flow Staged Combustion (FFSC)</h3>
+            <p>By routing 100% of the fuel and oxidizer through separate pre-burners, turbine temperatures remain lower while chamber pressures exceed 300 bar, delivering a vacuum specific impulse of 380 seconds.</p>
+            <div class="math-callout">I_sp = F / (m&#775; &middot; g&#8320;) = 380 seconds</div>
+            <h3>2. Boil-off Mitigation & In-Situ Propellant Compatibility</h3>
+            <p>Methane boils at 111 K, closely matching liquid oxygen (90 K), vastly simplifying co-axial bulkhead tank design compared to liquid hydrogen (20 K).</p>
+          `
+        },
+        {
+          title: "Deep Space Optical Communications (DSOC) & Gigabit Downlinks",
+          meta: "Optical Telemetry · 40 min · Intermediate · Spacecraft Systems",
+          body: `
+            <h3>1. The 1550 nm Near-Infrared Laser Advantage</h3>
+            <p>Traditional X-band RF telemetry yields 2-5 Mbps from Mars. DSOC achieves 267 Mbps by transmitting 1550 nm laser pulses, increasing bandwidth by 100x while consuming 60% less onboard power.</p>
+            <div class="math-callout">Beam Divergence: &theta; &approx; 1.22 &lambda; / D &approx; 1.5 &mu;rad</div>
+            <h3>2. Photon-Counting Superconducting Nanowire Arrays</h3>
+            <p>Detectors cooled to 1 Kelvin at the Palomar 5-meter telescope register individual photons to reconstruct 4K ultra-high-definition video streamed across 2.2 AU.</p>
+          `
+        }
+      ];
+
+      var labModal = document.getElementById('lab-modal');
+      var labModalClose = document.getElementById('lab-modal-close');
+      var modalLabTitle = document.getElementById('modal-lab-title');
+      var modalLabMeta = document.getElementById('modal-lab-meta');
+      var modalLabBody = document.getElementById('modal-lab-body');
+
+      document.querySelectorAll('.tut-open-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          playClickTick();
+          var idx = parseInt(btn.dataset.tutIdx, 10) || 0;
+          var data = LAB_MODULES[idx] || LAB_MODULES[0];
+          modalLabTitle.textContent = data.title;
+          modalLabMeta.textContent = data.meta;
+          modalLabBody.innerHTML = data.body;
+          labModal.classList.add('is-open');
+        });
+      });
+
+      if (labModalClose) {
+        labModalClose.addEventListener('click', function(){
+          labModal.classList.remove('is-open');
+        });
+      }
+      if (labModal) {
+        labModal.addEventListener('click', function(e){
+          if (e.target === labModal) labModal.classList.remove('is-open');
+        });
+      }
+
+      // 6. Blog Reader Modal & Newsletter Subscription
+      var ARTICLES_DATA = {
+        artemis: {
+          title: "Artemis III & the Quest for Shackleton Crater: Extracting Lunar Polar Volatiles for Deep Space In-Situ Resource Utilization",
+          meta: "Dr. Althea Vance & Tushar Kaldate · October 12, 2026 · Field Research · AIAA Ref #SE-2026-LUNAR-0191",
+          body: `
+            <h3>Abstract</h3>
+            <p>Permanently shadowed regions (PSRs) at the lunar South Pole harbor an estimated 600 million metric tons of volatile water ice trapped at cryogenic temperatures of 38-45 Kelvin. This paper, co-authored by Dr. Althea Vance and student researcher Tushar Kaldate (Batch T1), examines the thermo-mechanical excavation architecture and down-borehole microwave sublimation systems required for sustainable propellant production.</p>
+            <h3>1. The Sublimation Enclosure Architecture</h3>
+            <p>Rather than excavating super-hard cryogenic regolith with mechanical blades, direct concentrated thermal beaming vaporizes water ice in-situ:</p>
+            <div class="math-callout">H&#8322;O(s) &rarr; H&#8322;O(g) at T &ge; 210 K in 10&#8315;&#8312; mbar vacuum</div>
+            <p>A canopy dome traps vapor, directing it to cold-finger condenser canisters where purity tests verify &le; 0.05% volatile hydrocarbons.</p>
+            <h3>2. Solar Mast Power Pipeline</h3>
+            <p>A 50-meter deployable photovoltaic mast positioned atop the Peak of Eternal Light maintains 94% annual solar illumination, providing 250 kW of continuous electrical power transmitted down into Shackleton Crater via high-temperature superconducting DC cables.</p>
+            <h3>3. Propellant Economics</h3>
+            <p>Producing 1,200 metric tons of LOX/LH2 per annum in-situ avoids 14 Earth launches of heavy lift rockets, reducing total Mars mission architecture costs by 73%.</p>
+          `
+        },
+        venus: {
+          title: "Atmospheric Super-Rotation on Venus: How 400 km/h Winds Challenge Solar Aircraft Designs",
+          meta: "Dr. Henrik Soren · October 08, 2026 · Atmospheric Sciences",
+          body: `
+            <h3>1. The Super-Rotation Phenomenon</h3>
+            <p>While the solid surface of Venus rotates sluggishly once every 243 Earth days, its upper atmosphere circles the globe in just 4 Earth days—a phenomenon known as super-rotation with zonal wind speeds reaching 110 m/s (400 km/h) at the cloud tops.</p>
+            <h3>2. The Habitable Middle Atmosphere (55 km Altitude)</h3>
+            <p>At 50-55 km above the scorched surface, temperature measures a mild 20°C to 30°C and atmospheric pressure is roughly 1 bar. Long-endurance semi-buoyant tandem-wing drones can ride zonal jetstreams indefinitely, using photovoltaic wings facing the intense solar flux.</p>
+          `
+        },
+        mars: {
+          title: "Autonomous Hazard Detection and Avoidance (HDA) in Martian Terrain Landers",
+          meta: "Elena Rostova, M.S. · September 29, 2026 · Robotics & Autonomous Guidance",
+          body: `
+            <h3>1. The 14-Minute Communication Lag</h3>
+            <p>Because radio signals take between 4 and 24 minutes to travel from Mars to Earth, real-time pilot guidance during terminal descent is physically impossible. Landers must make survival decisions in milliseconds.</p>
+            <h3>2. Flash-LiDAR & Semantic Segmentation</h3>
+            <p>During the final 1,000 meters of descent, pulsed Flash-LiDAR constructs a real-time digital elevation model (DEM) with 5 cm vertical accuracy. Neural segmentation algorithms map rock distribution and slope inclination, adjusting rocket throttle vectors to touch down within 2 meters of safe terrain.</p>
+          `
+        },
+        gestalt: {
+          title: "Why Gestalt Psychology Prevents Catastrophic Operator Errors in Orbital Mission Control",
+          meta: "Tushar Kaldate (Batch T1) · September 22, 2026 · Human Factors Engineering · Design for Engineers",
+          body: `
+            <h3>1. Retrospective Analysis of Apollo 11 Alarm 1202</h3>
+            <p>During the Lunar Module descent, a radar task overload triggered the infamous 1202 program alarm. Buzz Aldrin and Neil Armstrong faced sensory overload from blinking annunciators that lacked categorical hierarchy.</p>
+            <h3>2. Gestalt Principles in Modern Mission Control</h3>
+            <p>Applying the Law of Focal Point, alarms are sorted not by arrival order, but by visual weight and cognitive urgency. The Law of Continuity guides scanning paths along critical telemetry vectors. Figure-Ground segregation ensures background diagnostic telemetry never competes with trajectory warnings.</p>
+            <div class="math-callout">Authored for "Design for Engineers" by Tushar Kalyanrao Kaldate, Computer Engineering Batch T1</div>
+          `
+        }
+      };
+
+      var articleModal = document.getElementById('article-modal');
+      var articleModalClose = document.getElementById('article-modal-close');
+      var modalArticleTitle = document.getElementById('modal-article-title');
+      var modalArticleMeta = document.getElementById('modal-article-meta');
+      var modalArticleBody = document.getElementById('modal-article-body');
+
+      function openArticle(key) {
+        playClickTick();
+        var item = ARTICLES_DATA[key] || ARTICLES_DATA.artemis;
+        modalArticleTitle.textContent = item.title;
+        modalArticleMeta.textContent = item.meta;
+        modalArticleBody.innerHTML = item.body;
+        articleModal.classList.add('is-open');
+      }
+
+      var openLeadBtn = document.getElementById('open-lead-article-btn');
+      if (openLeadBtn) {
+        openLeadBtn.addEventListener('click', function(){ openArticle('artemis'); });
+      }
+
+      document.querySelectorAll('.blog-read-link').forEach(function(link){
+        link.addEventListener('click', function(){
+          var key = link.dataset.article;
+          openArticle(key);
+        });
+      });
+
+      if (articleModalClose) {
+        articleModalClose.addEventListener('click', function(){
+          articleModal.classList.remove('is-open');
+        });
+      }
+      if (articleModal) {
+        articleModal.addEventListener('click', function(e){
+          if (e.target === articleModal) articleModal.classList.remove('is-open');
+        });
+      }
+
+      // Newsletter form
+      var newsForm = document.getElementById('newsletter-form');
+      var newsStatus = document.getElementById('news-status-msg');
+      if (newsForm) {
+        newsForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          playClickTick();
+          var emailInput = document.getElementById('news-email');
+          var email = emailInput ? emailInput.value : '';
+          if (newsStatus) {
+            newsStatus.textContent = '✓ Subscribed: ' + email + ' registered to Ground Station Telemetry Feed!';
+            newsStatus.style.display = 'block';
+          }
+          if (emailInput) emailInput.value = '';
+          showToast('Telemetry Bulletin subscription verified! Welcome to Ground Control.', '🛰️');
+        });
+      }
+
+      // 7. Footer Live Mission Clock & Quick Triggers
+      var missionClockEl = document.getElementById('footer-mission-clock');
+      function updateMissionClock() {
+        if (!missionClockEl) return;
+        var now = new Date();
+        var utcStr = now.toUTCString().slice(17, 25) + ' UTC';
+        var sols = 4124 + Math.floor((now.getTime() - 1760000000000) / (88775244));
+        missionClockEl.textContent = 'UTC: ' + utcStr + ' · MARS SOL: ' + sols;
+      }
+      setInterval(updateMissionClock, 1000);
+      updateMissionClock();
+
+      document.querySelectorAll('.ft-planet-link').forEach(function(lnk){
+        lnk.addEventListener('click', function(e){
+          e.preventDefault();
+          var p = lnk.dataset.planet;
+          if (p && typeof show === 'function') show(p);
+          var heroEl = document.getElementById('hero');
+          if (heroEl) heroEl.scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+
+      var ftGestaltTrigger = document.getElementById('ft-gestalt-trigger');
+      if (ftGestaltTrigger) {
+        ftGestaltTrigger.addEventListener('click', function(e){
+          e.preventDefault();
+          toggleGestaltMode(true);
+        });
+      }
+
+      var ftStudentTrigger = document.getElementById('ft-student-trigger');
+      if (ftStudentTrigger) {
+        ftStudentTrigger.addEventListener('click', function(e){
+          e.preventDefault();
+          if (studentModal) studentModal.classList.add('is-open');
+        });
+      }
+
+      var ftBackTop = document.getElementById('ft-back-top');
+      if (ftBackTop) {
+        ftBackTop.addEventListener('click', function(e){
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      // Universal Escape Handler for all open modals
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+          if (articleModal && articleModal.classList.contains('is-open')) {
+            articleModal.classList.remove('is-open');
+          }
+          if (labModal && labModal.classList.contains('is-open')) {
+            labModal.classList.remove('is-open');
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
